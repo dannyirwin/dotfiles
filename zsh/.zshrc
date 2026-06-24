@@ -61,10 +61,15 @@ if [[ -f "$ZINIT_HOME/zinit.zsh" ]]; then
   (( ${+_comps} )) && _comps[zinit]=_zinit
 
   # ── Plugins ───────────────────────────────────
-  zinit light zsh-users/zsh-autosuggestions
   zinit light zsh-users/zsh-completions
-  zinit light Aloxaf/fzf-tab
   zinit light MichaelAquilina/zsh-you-should-use
+
+  zinit ice wait"0a"
+  zinit light Aloxaf/fzf-tab
+
+  zinit ice wait"0a"
+  zinit light zsh-users/zsh-autosuggestions
+
   zinit ice wait"0a"
   zinit light zsh-users/zsh-syntax-highlighting
 

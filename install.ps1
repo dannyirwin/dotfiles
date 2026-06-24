@@ -161,7 +161,7 @@ if (Get-Command zoxide -ErrorAction SilentlyContinue) {
 # Aliases
 Set-Alias -Name v  -Value nvim   -Option AllScope -ErrorAction SilentlyContinue
 Set-Alias -Name vi -Value nvim   -Option AllScope -ErrorAction SilentlyContinue
-Set-Alias -Name g  -Value git
+Set-Alias -Name g  -Value git    -Option AllScope -ErrorAction SilentlyContinue
 function gs  { git status -sb }
 function gp  { git push }
 function gpl { git pull }
