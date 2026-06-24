@@ -63,8 +63,16 @@ function Install-Packages {
     "arndawg.tmux-windows"
   )
   foreach ($pkg in $packages) {
-    Invoke-Cmd winget install --id $pkg --silent --accept-source-agreements --accept-package-agreements
-    Ok "Installed: $pkg"
+    if ($DryRun) {
+      Write-Host "[dry-run] winget install --id $pkg --silent --accept-source-agreements --accept-package-agreements" -ForegroundColor Gray
+      continue
+    }
+    winget install --id $pkg --silent --accept-source-agreements --accept-package-agreements 2>&1 | Out-Null
+    if ($LASTEXITCODE -eq 0) {
+      Ok "Installed: $pkg"
+    } else {
+      Warn "Skipped $pkg (winget exit $LASTEXITCODE)"
+    }
   }
 }
 

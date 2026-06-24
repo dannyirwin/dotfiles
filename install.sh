@@ -26,6 +26,16 @@ run() {
   fi
 }
 
+run_pipe() {
+  local desc="$1"
+  shift
+  if $DRY_RUN; then
+    printf "\033[0;90m[dry-run]\033[0m %s\n" "$desc"
+  else
+    "$@"
+  fi
+}
+
 # Parse flags
 for arg in "$@"; do
   [[ "$arg" == "--dry-run" ]] && DRY_RUN=true
@@ -74,7 +84,11 @@ link_file() {
 install_homebrew() {
   if $IS_MAC && ! command -v brew &>/dev/null; then
     log "Installing Homebrew..."
-    run /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    if $DRY_RUN; then
+      printf "\033[0;90m[dry-run]\033[0m /bin/bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\"\n"
+    else
+      /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    fi
   fi
 }
 
@@ -115,20 +129,27 @@ install_linux_packages() {
     git \
     curl \
     fzf \
+    fd-find \
     ripgrep \
     tmux \
     neovim
 
+  if ! command -v fd &>/dev/null && command -v fdfind &>/dev/null; then
+    run sudo ln -sf "$(command -v fdfind)" /usr/local/bin/fd
+  fi
+
   # Starship
   if ! command -v starship &>/dev/null; then
     log "Installing Starship prompt..."
-    run curl -sS https://starship.rs/install.sh | sh -s -- --yes
+    run_pipe 'curl -sS https://starship.rs/install.sh | sh -s -- --yes' \
+      sh -c 'curl -sS https://starship.rs/install.sh | sh -s -- --yes'
   fi
 
   # zoxide
   if ! command -v zoxide &>/dev/null; then
     log "Installing zoxide..."
-    run curl -sS https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | bash
+    run_pipe 'curl -sS https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | bash' \
+      bash -c 'curl -sS https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | bash'
   fi
 }
 
