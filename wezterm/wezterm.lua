@@ -1,5 +1,5 @@
 -- ~/.config/wezterm/wezterm.lua
--- Dotfiles: github.com/yourname/dotfiles
+-- Dotfiles: github.com/dannyirwin/dotfiles
 
 local wezterm = require("wezterm")
 local config = wezterm.config_builder()

@@ -2,7 +2,7 @@
 # Run from an elevated PowerShell window:
 #   Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
 #   .\install.ps1
-# Dotfiles: github.com/yourname/dotfiles
+# Dotfiles: github.com/dannyirwin/dotfiles
 
 param([switch]$DryRun, [switch]$SkipSkills)
 

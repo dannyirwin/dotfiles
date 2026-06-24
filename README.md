@@ -1,17 +1,18 @@
 # dotfiles
 
-Personal dotfiles — WezTerm + tmux + Zsh/Bash, cross-platform (macOS, Linux, Windows).
+Personal dotfiles for WezTerm, tmux, Zsh, Neovim, and agent tooling.
+Cross-platform bootstrap for macOS, Linux, and Windows.
 
 ## What's included
 
-| File | Purpose |
+| Path | Purpose |
 |---|---|
-| `wezterm/wezterm.lua` | WezTerm config — Tokyo Night theme, key bindings, cross-platform shell detection |
-| `tmux/tmux.conf` | tmux config — Tokyo Night theme, vi copy mode, pane/window navigation |
-| `zsh/.zshrc` | Zsh config — completions, history, plugins, fzf |
+| `wezterm/wezterm.lua` | WezTerm - Tokyo Night theme, key bindings, cross-platform shell detection |
+| `tmux/tmux.conf` | tmux - Tokyo Night theme, vi copy mode, pane/window navigation |
+| `zsh/.zshrc` | Zsh - completions, history, plugins, fzf |
 | `zsh/common.sh` | Shared aliases and functions (sourced by zsh and bash) |
-| `zsh/starship.toml` | Starship prompt — Tokyo Night colors |
-| `nvim/init.lua` | Neovim config — Tokyo Night, which-key, Telescope |
+| `zsh/starship.toml` | Starship prompt - Tokyo Night colors |
+| `nvim/` | Neovim - Tokyo Night, lazy.nvim, which-key, Telescope |
 | `.agents/AGENTS.md` | Shared agent instructions (Cursor, Claude Code, etc.) |
 | `.agents/OPINIONS.md` | Durable beliefs and taste map for agents |
 | `skills-lock.json` | Locked agent skills list (installed via `npx skills`) |
@@ -29,18 +30,6 @@ One-liner (clone + install):
 curl -fsSL https://raw.githubusercontent.com/dannyirwin/dotfiles/main/docs/install.sh | sh
 ```
 
-Preview first:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/dannyirwin/dotfiles/main/docs/install.sh | sh -s -- --dry-run
-```
-
-Skip agent skills if Node.js is not available yet:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/dannyirwin/dotfiles/main/docs/install.sh | sh -s -- --skip-skills
-```
-
 Or clone manually:
 
 ```bash
@@ -49,33 +38,44 @@ cd ~/dotfiles
 bash install.sh
 ```
 
-Preview changes first with `--dry-run`:
-
-```bash
-bash install.sh --dry-run
-```
-
-Skip agent skills:
-
-```bash
-bash install.sh --skip-skills
-```
-
 ### Windows
 
 ```powershell
-# In an elevated PowerShell window:
 Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
 git clone https://github.com/dannyirwin/dotfiles.git $HOME\dotfiles
 cd $HOME\dotfiles
 .\install.ps1
 ```
 
----
+### Install flags
+
+| Flag | Applies to | Effect |
+|---|---|---|
+| `--dry-run` | `install.sh`, curl bootstrap | Print actions without making changes |
+| `--skip-skills` | `install.sh`, curl bootstrap | Skip `npx skills experimental_install` |
+| `--skip-no-mistakes` | `install.sh`, curl bootstrap | Skip [no-mistakes](https://github.com/kunchenguid/no-mistakes) install and gate setup |
+| `-DryRun` | `install.ps1` | Print actions without making changes |
+| `-SkipSkills` | `install.ps1` | Skip agent skills install |
+
+Examples:
+
+```bash
+bash install.sh --dry-run
+bash install.sh --skip-skills --skip-no-mistakes
+curl -fsSL https://raw.githubusercontent.com/dannyirwin/dotfiles/main/docs/install.sh | sh -s -- --dry-run
+```
+
+Environment variables for the curl bootstrap:
+
+| Variable | Default |
+|---|---|
+| `DOTFILES_REPO` | `dannyirwin/dotfiles` |
+| `DOTFILES_BRANCH` | `main` |
+| `DOTFILES_DIR` | `$HOME/dotfiles` |
 
 ## How symlinking works
 
-The install scripts create symlinks from where programs expect their config to the files inside this repo:
+The install scripts create symlinks from where programs expect config to the files in this repo:
 
 ```
 ~/.config/wezterm/wezterm.lua  →  ~/dotfiles/wezterm/wezterm.lua
@@ -89,9 +89,12 @@ The install scripts create symlinks from where programs expect their config to t
 ~/.claude/CLAUDE.md             →  ~/dotfiles/.agents/AGENTS.md
 ```
 
-Any edit you make to files in `~/dotfiles` is immediately reflected — no copying needed. Commit and push to save changes to GitHub.
+Edit files in `~/dotfiles` and commit to save changes.
+Re-run `install.sh` only when new symlinks are added.
 
-### Neovim keymaps
+## Neovim
+
+First launch installs plugins automatically via lazy.nvim.
 
 | Key | Action |
 |---|---|
@@ -103,17 +106,14 @@ Any edit you make to files in `~/dotfiles` is immediately reflected — no copyi
 | `<Space>fh` | Help tags |
 | `<Space>w` | Save |
 | `<Space>q` | Quit window |
-| `<Space>` then wait | which-key popup for discoverable keys |
+| `<Space>` then wait | which-key popup |
 
-First launch installs plugins automatically via lazy.nvim.
+## Agent setup
 
-### Agent instructions
+### Instructions
 
 The source of truth is `.agents/AGENTS.md`.
 Root `AGENTS.md` is a symlink so Cursor discovers it in this repo.
-
-Edit `.agents/AGENTS.md` for rules that apply across Cursor, Claude Code, and other agents.
-Edit `.agents/OPINIONS.md` for durable taste and engineering beliefs agents should read on demand.
 
 `install.sh` links those files so tools find them in the usual places:
 
@@ -121,9 +121,12 @@ Edit `.agents/OPINIONS.md` for durable taste and engineering beliefs agents shou
 - `~/.agents/` for global access to `OPINIONS.md` and skills
 - `~/.claude/CLAUDE.md` for Claude Code global instructions
 
-### Agent skills
+Edit `.agents/AGENTS.md` for rules that apply across agents.
+Edit `.agents/OPINIONS.md` for durable taste and engineering beliefs agents should read on demand.
 
-Skills are managed with the agent-agnostic [`npx skills`](https://skills.sh/) CLI, not copied by hand.
+### Skills
+
+Skills are managed with the agent-agnostic [`npx skills`](https://skills.sh/) CLI.
 Commit `skills-lock.json` only.
 Installed skill files under `.agents/skills/` are generated and gitignored.
 
@@ -142,44 +145,49 @@ cd ~/dotfiles
 npx skills experimental_install
 ```
 
-`experimental_install` restores skills from `skills-lock.json` into `.agents/skills/` and registers them with detected agents (Cursor, Claude Code, Codex, and others).
+### no-mistakes
 
----
+On macOS and Linux, `install.sh` installs [no-mistakes](https://github.com/kunchenguid/no-mistakes) and runs `no-mistakes init` for this repo.
+That adds a `no-mistakes` git remote and installs the `/no-mistakes` agent skill at user level.
+
+Push through the validation gate:
+
+```bash
+git push no-mistakes <branch>
+```
+
+Or invoke `/no-mistakes` in a new agent chat after install.
+Start a fresh chat session so the skill is loaded.
+
+Windows is not supported by no-mistakes yet.
+Use `-SkipSkills` on Windows as needed; there is no Windows gate setup.
 
 ## Machine-specific config
 
-Anything you don't want tracked (API keys, work-specific paths, etc.) goes in:
+Anything you do not want tracked (API keys, work paths, etc.) goes in:
 
-- **Mac/Linux:** `~/.zshrc.local` — auto-sourced at the bottom of `.zshrc`
-- **Windows:** Create a `local.ps1` and dot-source it from your PowerShell profile
-
----
+- **macOS / Linux:** `~/.zshrc.local` - auto-sourced at the bottom of `.zshrc`
+- **Windows:** a local `local.ps1` dot-sourced from your PowerShell profile
 
 ## Recommended fonts
 
-WezTerm will fall back gracefully if fonts aren't installed, but for the best experience:
+WezTerm falls back gracefully without these, but they look best:
 
-- **JetBrains Mono** — https://www.jetbrains.com/legalnotices/font/
-- **Cascadia Code** — https://github.com/microsoft/cascadia-code (Windows, already bundled with some terminals)
-
----
-
-## Adding more configs later
-
-To add git, Neovim, etc:
-
-1. Create a folder: `mkdir git` or `mkdir nvim`
-2. Drop the config files inside
-3. Add a `link_git()` or `link_nvim()` function to `install.sh` and `install.ps1`
-4. Call it at the bottom of each script
-
----
+- [JetBrains Mono](https://www.jetbrains.com/legalnotices/font/)
+- [Cascadia Code](https://github.com/microsoft/cascadia-code) (Windows; bundled with some terminals)
 
 ## Updating
 
 ```bash
 cd ~/dotfiles
 git pull
-# re-run install.sh only if new symlinks were added
+# Re-run install.sh only if new symlinks or install steps were added
+bash install.sh
 ```
 
+## Adding more configs
+
+1. Add config files under a new folder in this repo (for example `git/`).
+2. Add a `link_*()` function to `install.sh` and `install.ps1`.
+3. Call it from the run section at the bottom of each script.
+4. Document the new path in this README.

@@ -1,6 +1,6 @@
 # ~/.config/shell/common.sh
 # Shared config sourced by both .zshrc and .bashrc
-# Dotfiles: github.com/yourname/dotfiles
+# Dotfiles: github.com/dannyirwin/dotfiles
 
 # ─────────────────────────────────────────────
 #  XDG base dirs (good hygiene)

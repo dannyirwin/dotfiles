@@ -1,5 +1,5 @@
 -- ~/.config/nvim/init.lua
--- Dotfiles: github.com/yourname/dotfiles
+-- Dotfiles: github.com/dannyirwin/dotfiles
 
 require("config.options")
 require("config.keymaps")

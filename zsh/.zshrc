@@ -1,5 +1,5 @@
 # ~/.zshrc
-# Dotfiles: github.com/yourname/dotfiles
+# Dotfiles: github.com/dannyirwin/dotfiles
 
 # ─────────────────────────────────────────────
 #  Source shared config

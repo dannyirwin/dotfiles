@@ -1,6 +1,6 @@
 # ~/.config/starship.toml
 # Tokyo Night prompt — https://starship.rs
-# Dotfiles: github.com/yourname/dotfiles
+# Dotfiles: github.com/dannyirwin/dotfiles
 
 format = """
 $directory\
