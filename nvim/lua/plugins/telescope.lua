@@ -1,12 +1,27 @@
+local function resolve_fd()
+  if vim.fn.executable("fd") == 1 then
+    return "fd"
+  end
+  if vim.fn.executable("fdfind") == 1 then
+    return "fdfind"
+  end
+  local local_fd = vim.fn.expand("~/.local/bin/fd")
+  if vim.fn.executable(local_fd) == 1 then
+    return local_fd
+  end
+  return nil
+end
+
 local function find_files_opts()
   local opts = {
     hidden = true,
     no_ignore = false,
   }
 
-  if vim.fn.executable("fd") == 1 then
+  local fd = resolve_fd()
+  if fd then
     opts.find_command = {
-      "fd",
+      fd,
       "--type",
       "f",
       "--hidden",

@@ -61,11 +61,11 @@ if [[ -f "$ZINIT_HOME/zinit.zsh" ]]; then
   (( ${+_comps} )) && _comps[zinit]=_zinit
 
   # ── Plugins ───────────────────────────────────
-  zinit light zsh-users/zsh-syntax-highlighting
   zinit light zsh-users/zsh-autosuggestions
   zinit light zsh-users/zsh-completions
   zinit light Aloxaf/fzf-tab
   zinit light MichaelAquilina/zsh-you-should-use
+  zinit light zsh-users/zsh-syntax-highlighting
 
   # ── Plugin config ─────────────────────────────
   ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#565f89"
@@ -91,7 +91,7 @@ fi
 zstyle ':fzf-tab:*' fzf-flags \
   --color="bg+:#283457,bg:#1a1b26,border:#565f89,hl:#bb9af7,fg:#c0caf5,fg+:#c0caf5,hl+:#7aa2f7,pointer:#7aa2f7"
 zstyle ':fzf-tab:*' switch-group ',' '.'
-zstyle ':fzf-tab:complete:cd:*' fzf-preview 'ls --color $realpath 2>/dev/null || ls $realpath'
+zstyle ':fzf-tab:complete:cd:*' fzf-preview 'ls -G $realpath 2>/dev/null || ls --color=auto $realpath 2>/dev/null || ls $realpath'
 zstyle ':completion:*' menu no
 zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
 zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"

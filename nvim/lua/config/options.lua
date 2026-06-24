@@ -38,7 +38,18 @@ opt.swapfile = false
 opt.backup = false
 opt.writebackup = false
 
-opt.clipboard = "unnamedplus"
+local function clipboard_available()
+  if vim.fn.has("mac") == 1 or vim.fn.has("win32") == 1 then
+    return true
+  end
+  return vim.fn.executable("xclip") == 1
+    or vim.fn.executable("xsel") == 1
+    or vim.fn.executable("wl-copy") == 1
+end
+
+if clipboard_available() then
+  opt.clipboard = "unnamedplus"
+end
 
 opt.list = true
 opt.listchars = {

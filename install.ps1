@@ -39,12 +39,17 @@ function Link-File {
     if (!$DryRun) { Remove-Item $Dst }
   }
 
-  if (!$DryRun) {
-    New-Item -ItemType SymbolicLink -Path $Dst -Target $Src -Force | Out-Null
-  } else {
+  if ($DryRun) {
     Write-Host "[dry-run] Link $Dst → $Src" -ForegroundColor Gray
+    return
   }
-  Ok "Linked: $Dst"
+
+  try {
+    New-Item -ItemType SymbolicLink -Path $Dst -Target $Src -Force -ErrorAction Stop | Out-Null
+    Ok "Linked: $Dst"
+  } catch {
+    Warn "Could not link $Dst — enable Developer Mode or run as admin ($($_.Exception.Message))"
+  }
 }
 
 # ─────────────────────────────────────────────
@@ -123,12 +128,17 @@ function Link-Nvim {
     if (!$DryRun) { Remove-Item $dst }
   }
 
-  if (!$DryRun) {
-    New-Item -ItemType SymbolicLink -Path $dst -Target "$DOTFILES\nvim" -Force | Out-Null
-  } else {
+  if ($DryRun) {
     Write-Host "[dry-run] Link $dst → $DOTFILES\nvim" -ForegroundColor Gray
+    return
   }
-  Ok "Linked: $dst"
+
+  try {
+    New-Item -ItemType SymbolicLink -Path $dst -Target "$DOTFILES\nvim" -Force -ErrorAction Stop | Out-Null
+    Ok "Linked: $dst"
+  } catch {
+    Warn "Could not link $dst — enable Developer Mode or run as admin ($($_.Exception.Message))"
+  }
 }
 
 # ─────────────────────────────────────────────
@@ -196,12 +206,17 @@ function Link-Agents {
     if (!$DryRun) { Remove-Item $agentsDst }
   }
 
-  if (!$DryRun) {
-    New-Item -ItemType SymbolicLink -Path $agentsDst -Target "$DOTFILES\.agents" -Force | Out-Null
-  } else {
+  if ($DryRun) {
     Write-Host "[dry-run] Link $agentsDst → $DOTFILES\.agents" -ForegroundColor Gray
+    return
   }
-  Ok "Linked: $agentsDst"
+
+  try {
+    New-Item -ItemType SymbolicLink -Path $agentsDst -Target "$DOTFILES\.agents" -Force -ErrorAction Stop | Out-Null
+    Ok "Linked: $agentsDst"
+  } catch {
+    Warn "Could not link $agentsDst — enable Developer Mode or run as admin ($($_.Exception.Message))"
+  }
 
   Link-File "$DOTFILES\.agents\AGENTS.md" `
             "$env:USERPROFILE\.claude\CLAUDE.md"

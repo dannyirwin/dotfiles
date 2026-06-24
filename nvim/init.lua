@@ -8,7 +8,7 @@ require("config.autocmds")
 -- Bootstrap lazy.nvim
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.loop.fs_stat(lazypath) then
-  vim.fn.system({
+  local result = vim.fn.system({
     "git",
     "clone",
     "--filter=blob:none",
@@ -16,6 +16,10 @@ if not vim.loop.fs_stat(lazypath) then
     "--branch=stable",
     lazypath,
   })
+  if vim.v.shell_error ~= 0 or not vim.loop.fs_stat(lazypath) then
+    vim.api.nvim_err_writeln("lazy.nvim bootstrap failed: " .. vim.fn.trim(result))
+    return
+  end
 end
 vim.opt.rtp:prepend(lazypath)
 

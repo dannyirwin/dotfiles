@@ -157,7 +157,9 @@ install_linux_packages() {
     fd-find \
     ripgrep \
     tmux \
-    neovim
+    neovim \
+    xclip \
+    wl-clipboard
 
   if ! command -v fd &>/dev/null && command -v fdfind &>/dev/null; then
     local fdfind_bin fd_link="$HOME/.local/bin/fd"
