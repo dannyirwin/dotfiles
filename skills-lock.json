@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "skills": {
+    "gh-axi": {
+      "source": "kunchenguid/gh-axi",
+      "sourceType": "github",
+      "skillPath": "skills/gh-axi/SKILL.md",
+      "computedHash": "5f14acbb97a10de359c3ad0a16a9effe2eee804f9aded53af28534d61aaf0dd9"
+    },
+    "lavish": {
+      "source": "kunchenguid/lavish-axi",
+      "sourceType": "github",
+      "skillPath": "skills/lavish/SKILL.md",
+      "computedHash": "7fdc9a25ba80783b336fcd8ffbc9624274ad0647bf383004b5bdd1035a9229f2"
+    },
+    "skill-creator": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "skillPath": "skills/skill-creator/SKILL.md",
+      "computedHash": "5ea13a6d9f0d4bb694405d79acd00cadec0d21bb138c4dd10fcf3c500cb835c2"
+    }
+  }
+}

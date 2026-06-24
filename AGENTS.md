@@ -1,0 +1,1 @@
+/Users/dirwin/dotfiles/.agents/AGENTS.md

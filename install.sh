@@ -1,0 +1,335 @@
+#!/usr/bin/env bash
+# install.sh — dotfiles bootstrap for macOS and Linux
+# Usage: bash install.sh [--dry-run] [--skip-skills] [--skip-no-mistakes]
+# Dotfiles: github.com/dannyirwin/dotfiles
+
+set -euo pipefail
+
+DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DRY_RUN=false
+SKIP_SKILLS=false
+SKIP_NO_MISTAKES=false
+
+# ─────────────────────────────────────────────
+#  Helpers
+# ─────────────────────────────────────────────
+log()     { printf "\033[0;34m▶\033[0m  %s\n" "$*"; }
+success() { printf "\033[0;32m✔\033[0m  %s\n" "$*"; }
+warn()    { printf "\033[0;33m⚠\033[0m  %s\n" "$*"; }
+error()   { printf "\033[0;31m✖\033[0m  %s\n" "$*" >&2; }
+
+run() {
+  if $DRY_RUN; then
+    printf "\033[0;90m[dry-run]\033[0m %s\n" "$*"
+  else
+    "$@"
+  fi
+}
+
+# Parse flags
+for arg in "$@"; do
+  [[ "$arg" == "--dry-run" ]] && DRY_RUN=true
+  [[ "$arg" == "--skip-skills" ]] && SKIP_SKILLS=true
+  [[ "$arg" == "--skip-no-mistakes" ]] && SKIP_NO_MISTAKES=true
+done
+
+$DRY_RUN && warn "Dry-run mode — no changes will be made."
+
+# ─────────────────────────────────────────────
+#  Platform
+# ─────────────────────────────────────────────
+OS="$(uname -s)"
+case "$OS" in
+  Darwin) IS_MAC=true  ;;
+  Linux)  IS_MAC=false ;;
+  *)      error "Unsupported OS: $OS"; exit 1 ;;
+esac
+
+# ─────────────────────────────────────────────
+#  Symlink helper
+#  link_file <source> <target>
+# ─────────────────────────────────────────────
+link_file() {
+  local src="$1" dst="$2"
+  local dst_dir; dst_dir="$(dirname "$dst")"
+
+  run mkdir -p "$dst_dir"
+
+  if [[ -e "$dst" && ! -L "$dst" ]]; then
+    warn "Backing up existing file: $dst → $dst.backup"
+    run mv "$dst" "$dst.backup"
+  fi
+
+  if [[ -L "$dst" ]]; then
+    run rm "$dst"
+  fi
+
+  run ln -s "$src" "$dst"
+  success "Linked: $dst → $src"
+}
+
+# ─────────────────────────────────────────────
+#  Homebrew (Mac only)
+# ─────────────────────────────────────────────
+install_homebrew() {
+  if $IS_MAC && ! command -v brew &>/dev/null; then
+    log "Installing Homebrew..."
+    run /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  fi
+}
+
+install_mac_packages() {
+  if ! $IS_MAC; then return; fi
+  log "Installing packages via Homebrew..."
+
+  local packages=(
+    starship         # prompt
+    fzf              # fuzzy finder
+    fd               # fast find
+    ripgrep          # fast grep
+    zsh-autosuggestions
+    zsh-syntax-highlighting
+    zoxide           # smarter cd
+    git
+    tmux
+    neovim
+  )
+
+  for pkg in "${packages[@]}"; do
+    if brew list "$pkg" &>/dev/null; then
+      log "Already installed: $pkg"
+    else
+      run brew install "$pkg"
+      success "Installed: $pkg"
+    fi
+  done
+}
+
+install_linux_packages() {
+  if $IS_MAC; then return; fi
+  log "Installing packages (apt)..."
+
+  run sudo apt-get update -qq
+  run sudo apt-get install -y \
+    zsh \
+    git \
+    curl \
+    fzf \
+    ripgrep \
+    tmux \
+    neovim
+
+  # Starship
+  if ! command -v starship &>/dev/null; then
+    log "Installing Starship prompt..."
+    run curl -sS https://starship.rs/install.sh | sh -s -- --yes
+  fi
+
+  # zoxide
+  if ! command -v zoxide &>/dev/null; then
+    log "Installing zoxide..."
+    run curl -sS https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | bash
+  fi
+}
+
+# ─────────────────────────────────────────────
+#  WezTerm config
+# ─────────────────────────────────────────────
+link_wezterm() {
+  log "Linking WezTerm config..."
+  if $IS_MAC; then
+    # WezTerm checks ~/.config/wezterm/wezterm.lua first on Mac
+    link_file "$DOTFILES_DIR/wezterm/wezterm.lua" \
+              "$HOME/.config/wezterm/wezterm.lua"
+  else
+    link_file "$DOTFILES_DIR/wezterm/wezterm.lua" \
+              "$HOME/.config/wezterm/wezterm.lua"
+  fi
+}
+
+# ─────────────────────────────────────────────
+#  tmux config
+# ─────────────────────────────────────────────
+link_tmux() {
+  log "Linking tmux config..."
+  link_file "$DOTFILES_DIR/tmux/tmux.conf" \
+            "$HOME/.tmux.conf"
+}
+
+# ─────────────────────────────────────────────
+#  Shell config
+# ─────────────────────────────────────────────
+link_shell() {
+  log "Linking shell config..."
+
+  # Shared common config
+  link_file "$DOTFILES_DIR/zsh/common.sh" \
+            "$HOME/.config/shell/common.sh"
+
+  # zshrc
+  link_file "$DOTFILES_DIR/zsh/.zshrc" \
+            "$HOME/.zshrc"
+
+  # Starship prompt
+  link_file "$DOTFILES_DIR/zsh/starship.toml" \
+            "$HOME/.config/starship.toml"
+}
+
+# ─────────────────────────────────────────────
+#  Neovim config
+# ─────────────────────────────────────────────
+link_nvim() {
+  log "Linking Neovim config..."
+  local dst="$HOME/.config/nvim"
+
+  run mkdir -p "$(dirname "$dst")"
+
+  if [[ -e "$dst" && ! -L "$dst" ]]; then
+    warn "Backing up existing directory: $dst → $dst.backup"
+    run mv "$dst" "$dst.backup"
+  fi
+
+  if [[ -L "$dst" ]]; then
+    run rm "$dst"
+  fi
+
+  run ln -s "$DOTFILES_DIR/nvim" "$dst"
+  success "Linked: $dst → $DOTFILES_DIR/nvim"
+}
+
+# ─────────────────────────────────────────────
+#  Agent instructions
+# ─────────────────────────────────────────────
+link_agents() {
+  log "Linking agent instructions..."
+
+  # Cursor and other tools: repo-root AGENTS.md
+  link_file "$DOTFILES_DIR/.agents/AGENTS.md" \
+            "$DOTFILES_DIR/AGENTS.md"
+
+  # Global agent context (OPINIONS.md, future automation)
+  local agents_dst="$HOME/.agents"
+
+  run mkdir -p "$(dirname "$agents_dst")"
+
+  if [[ -e "$agents_dst" && ! -L "$agents_dst" ]]; then
+    warn "Backing up existing directory: $agents_dst → $agents_dst.backup"
+    run mv "$agents_dst" "$agents_dst.backup"
+  fi
+
+  if [[ -L "$agents_dst" ]]; then
+    run rm "$agents_dst"
+  fi
+
+  run ln -s "$DOTFILES_DIR/.agents" "$agents_dst"
+  success "Linked: $agents_dst → $DOTFILES_DIR/.agents"
+
+  # Claude Code global instructions
+  link_file "$DOTFILES_DIR/.agents/AGENTS.md" \
+            "$HOME/.claude/CLAUDE.md"
+}
+
+# ─────────────────────────────────────────────
+#  Agent skills (via npx skills)
+# ─────────────────────────────────────────────
+install_skills() {
+  if $SKIP_SKILLS; then
+    warn "Skipping skills install (--skip-skills)"
+    return
+  fi
+
+  if [[ ! -f "$DOTFILES_DIR/skills-lock.json" ]]; then
+    log "No skills-lock.json found — skipping skills install"
+    return
+  fi
+
+  if ! command -v npx &>/dev/null; then
+    warn "npx not found — skipping skills install (install Node.js to enable)"
+    return
+  fi
+
+  log "Installing agent skills from skills-lock.json..."
+
+  if $DRY_RUN; then
+    printf "\033[0;90m[dry-run]\033[0m cd %s && npx --yes skills experimental_install\n" "$DOTFILES_DIR"
+    return
+  fi
+
+  (cd "$DOTFILES_DIR" && npx --yes skills experimental_install)
+  success "Skills installed from skills-lock.json"
+}
+
+# ─────────────────────────────────────────────
+#  no-mistakes git gate + /no-mistakes skill
+# ─────────────────────────────────────────────
+setup_no_mistakes() {
+  if $SKIP_NO_MISTAKES; then
+    warn "Skipping no-mistakes setup (--skip-no-mistakes)"
+    return
+  fi
+
+  if ! git -C "$DOTFILES_DIR" rev-parse --is-inside-work-tree &>/dev/null; then
+    warn "Not a git repo — skipping no-mistakes init"
+    return
+  fi
+
+  if ! git -C "$DOTFILES_DIR" remote get-url origin &>/dev/null; then
+    warn "No origin remote — skipping no-mistakes init"
+    return
+  fi
+
+  local no_mistakes_url="https://raw.githubusercontent.com/kunchenguid/no-mistakes/main/docs/install.sh"
+  export PATH="$HOME/.local/bin:$PATH"
+
+  if ! command -v no-mistakes &>/dev/null; then
+    log "Installing no-mistakes..."
+    if $DRY_RUN; then
+      printf "\033[0;90m[dry-run]\033[0m curl -fsSL %s | sh\n" "$no_mistakes_url"
+      printf "\033[0;90m[dry-run]\033[0m cd %s && no-mistakes init\n" "$DOTFILES_DIR"
+      return
+    fi
+    curl -fsSL "$no_mistakes_url" | sh
+    success "Installed no-mistakes"
+  fi
+
+  log "Initializing no-mistakes gate for dotfiles..."
+  if $DRY_RUN; then
+    printf "\033[0;90m[dry-run]\033[0m cd %s && no-mistakes init\n" "$DOTFILES_DIR"
+    return
+  fi
+
+  (cd "$DOTFILES_DIR" && no-mistakes init)
+  success "no-mistakes gate initialized (git push no-mistakes <branch>, or /no-mistakes in agents)"
+}
+
+# ─────────────────────────────────────────────
+#  Run
+# ─────────────────────────────────────────────
+echo ""
+echo "  ██████╗  ██████╗ ████████╗███████╗██╗██╗     ███████╗███████╗"
+echo "  ██╔══██╗██╔═══██╗╚══██╔══╝██╔════╝██║██║     ██╔════╝██╔════╝"
+echo "  ██║  ██║██║   ██║   ██║   █████╗  ██║██║     █████╗  ███████╗"
+echo "  ██║  ██║██║   ██║   ██║   ██╔══╝  ██║██║     ██╔══╝  ╚════██║"
+echo "  ██████╔╝╚██████╔╝   ██║   ██║     ██║███████╗███████╗███████║"
+echo "  ╚═════╝  ╚═════╝    ╚═╝   ╚═╝     ╚═╝╚══════╝╚══════╝╚══════╝"
+echo ""
+
+install_homebrew
+install_mac_packages
+install_linux_packages
+link_wezterm
+link_tmux
+link_shell
+link_nvim
+link_agents
+install_skills
+setup_no_mistakes
+
+echo ""
+success "All done! Restart WezTerm and open a new shell to see changes."
+echo ""
+echo "  Optional next steps:"
+echo "  • Install JetBrains Mono font: https://www.jetbrains.com/legalnotices/font/"
+echo "  • Add a ~/.zshrc.local for machine-specific config (not tracked)"
+echo "  • Run 'git -C $DOTFILES_DIR status' to check everything looks right"
+echo ""
