@@ -151,19 +151,44 @@ install_linux_packages() {
   if $IS_MAC; then return; fi
   log "Installing packages (apt)..."
 
-  run sudo apt-get update -qq
-  run sudo apt-get install -y \
-    zsh \
-    git \
-    curl \
-    fzf \
-    fd-find \
-    ripgrep \
-    tmux \
-    ncurses-term \
-    neovim \
-    xclip \
+  if ! command -v apt-get &>/dev/null; then
+    warn "apt-get not found — skipping Linux package install"
+    return
+  fi
+
+  local packages=(
+    zsh
+    git
+    curl
+    fzf
+    fd-find
+    ripgrep
+    tmux
+    ncurses-term
+    neovim
+    xclip
     wl-clipboard
+  )
+
+  if $DRY_RUN; then
+    run sudo apt-get update -qq
+    for pkg in "${packages[@]}"; do
+      run sudo apt-get install -y "$pkg"
+    done
+  else
+    if ! sudo apt-get update -qq; then
+      warn "apt-get update failed — continuing with package install"
+    fi
+    for pkg in "${packages[@]}"; do
+      if dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q " install ok installed"; then
+        log "Already installed: $pkg"
+      elif sudo apt-get install -y "$pkg"; then
+        success "Installed: $pkg"
+      else
+        warn "Skipped $pkg (apt install failed)"
+      fi
+    done
+  fi
 
   if ! command -v fd &>/dev/null && command -v fdfind &>/dev/null; then
     local fdfind_bin fd_link="$HOME/.local/bin/fd"

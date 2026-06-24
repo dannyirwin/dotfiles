@@ -254,6 +254,8 @@ function Link-Agents {
 
   if ($DryRun) {
     Write-Host "[dry-run] Link $agentsDst → $DOTFILES\.agents" -ForegroundColor Gray
+    Link-File "$DOTFILES\.agents\AGENTS.md" `
+              "$env:USERPROFILE\.claude\CLAUDE.md"
     return
   }
 

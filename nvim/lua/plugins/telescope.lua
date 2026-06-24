@@ -107,11 +107,13 @@ return {
         "%.cache/",
       },
     },
-    pickers = {
-      find_files = find_files_opts(),
-    },
   },
   config = function(_, opts)
     require("telescope").setup(opts)
+    local builtin = require("telescope.builtin")
+    local find_files = builtin.find_files
+    builtin.find_files = function(telescope_opts, ...)
+      return find_files(vim.tbl_deep_extend("force", find_files_opts(), telescope_opts or {}), ...)
+    end
   end,
 }
