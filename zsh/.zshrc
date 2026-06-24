@@ -115,11 +115,17 @@ fi
 # ─────────────────────────────────────────────
 #  fzf key bindings
 # ─────────────────────────────────────────────
-for f in \
-  /opt/homebrew/opt/fzf/shell/key-bindings.zsh \
-  /usr/share/doc/fzf/examples/key-bindings.zsh; do
-  [[ -f "$f" ]] && { source "$f"; break; }
-done
+if command -v fzf &>/dev/null; then
+  if fzf --zsh &>/dev/null; then
+    source <(fzf --zsh)
+  else
+    for f in \
+      /opt/homebrew/opt/fzf/shell/key-bindings.zsh \
+      /usr/share/doc/fzf/examples/key-bindings.zsh; do
+      [[ -f "$f" ]] && { source "$f"; break; }
+    done
+  fi
+fi
 
 # ─────────────────────────────────────────────
 #  Local overrides

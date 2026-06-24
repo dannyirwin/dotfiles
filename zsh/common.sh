@@ -57,7 +57,9 @@ export HISTCONTROL="ignoreboth:erasedups"
 #  Colors
 # ─────────────────────────────────────────────
 export CLICOLOR=1
-export TERM="xterm-256color"
+if [[ -z "${TMUX:-}" && "${TERM:-}" != tmux* ]]; then
+  export TERM="xterm-256color"
+fi
 export COLORTERM="truecolor"
 
 # ls colors (GNU on Linux, BSD on Mac)
@@ -172,11 +174,19 @@ if command -v fzf &>/dev/null; then
     --color=fg:#c0caf5,header:#7aa2f7,info:#7dcfff,pointer:#7aa2f7
     --color=marker:#9ece6a,fg+:#c0caf5,prompt:#7aa2f7,hl+:#7aa2f7
   "
-  # Use fd if available (faster, respects .gitignore)
+  _fzf_fd=""
   if command -v fd &>/dev/null; then
-    export FZF_DEFAULT_COMMAND="fd --type f --hidden --follow --exclude .git"
-    export FZF_ALT_C_COMMAND="fd --type d --hidden --follow --exclude .git"
+    _fzf_fd="fd"
+  elif command -v fdfind &>/dev/null; then
+    _fzf_fd="fdfind"
+  elif [[ -x "$HOME/.local/bin/fd" ]]; then
+    _fzf_fd="$HOME/.local/bin/fd"
   fi
+  if [[ -n "$_fzf_fd" ]]; then
+    export FZF_DEFAULT_COMMAND="$_fzf_fd --type f --hidden --follow --exclude .git"
+    export FZF_ALT_C_COMMAND="$_fzf_fd --type d --hidden --follow --exclude .git"
+  fi
+  unset _fzf_fd
 fi
 
 # ─────────────────────────────────────────────
