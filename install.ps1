@@ -236,10 +236,14 @@ function Install-Skills {
   Push-Location $DOTFILES
   try {
     npx --yes skills experimental_install
+    if ($LASTEXITCODE -eq 0) {
+      Ok "Skills installed from skills-lock.json"
+    } else {
+      Warn "Skills install failed — continuing (run 'npx skills experimental_install' in $DOTFILES manually)"
+    }
   } finally {
     Pop-Location
   }
-  Ok "Skills installed from skills-lock.json"
 }
 
 # ─────────────────────────────────────────────

@@ -99,20 +99,29 @@ local function resolve_windows_shell()
     { "powershell.exe", "-NoLogo" },
   }
   for _, prog in ipairs(candidates) do
-    local ok = wezterm.run_child_process({ "cmd.exe", "/c", "where", prog[1] }, "")
-    if ok then
+    local success = wezterm.run_child_process({ "cmd.exe", "/c", "where", prog[1] })
+    if success then
       return prog
     end
   end
   return { "powershell.exe", "-NoLogo" }
 end
 
+local function resolve_unix_shell()
+  for _, path in ipairs({ "/bin/zsh", "/usr/bin/zsh" }) do
+    local f = io.open(path, "r")
+    if f then
+      f:close()
+      return { path, "-l" }
+    end
+  end
+  return { "zsh", "-l" }
+end
+
 if is_windows then
   config.default_prog = resolve_windows_shell()
-elseif is_mac then
-  config.default_prog = { "/bin/zsh", "-l" }
 else
-  config.default_prog = { "/bin/zsh", "-l" }
+  config.default_prog = resolve_unix_shell()
 end
 
 -- ─────────────────────────────────────────────

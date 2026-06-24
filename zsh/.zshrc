@@ -43,32 +43,39 @@ bindkey '^[[3~' delete-char             # delete
 # ─────────────────────────────────────────────
 ZINIT_HOME="${XDG_DATA_HOME:-$HOME/.local/share}/zinit/zinit.git"
 
-# Auto-install Zinit if not present
-if [[ ! -d "$ZINIT_HOME" ]]; then
+if [[ ! -f "$ZINIT_HOME/zinit.zsh" ]]; then
+  if [[ -d "$ZINIT_HOME" ]]; then
+    rm -rf "$ZINIT_HOME"
+  fi
   echo "Installing Zinit..."
   mkdir -p "$(dirname "$ZINIT_HOME")"
-  git clone https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME"
+  if ! git clone https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME"; then
+    rm -rf "$ZINIT_HOME" 2>/dev/null
+    echo "Zinit install failed — shell will start without plugins" >&2
+  fi
 fi
 
-source "$ZINIT_HOME/zinit.zsh"
-autoload -Uz _zinit
-(( ${+_comps} )) && _comps[zinit]=_zinit
+if [[ -f "$ZINIT_HOME/zinit.zsh" ]]; then
+  source "$ZINIT_HOME/zinit.zsh"
+  autoload -Uz _zinit
+  (( ${+_comps} )) && _comps[zinit]=_zinit
 
-# ── Plugins ───────────────────────────────────
-zinit light zsh-users/zsh-syntax-highlighting
-zinit light zsh-users/zsh-autosuggestions
-zinit light zsh-users/zsh-completions
-zinit light Aloxaf/fzf-tab
-zinit light MichaelAquilina/zsh-you-should-use
+  # ── Plugins ───────────────────────────────────
+  zinit light zsh-users/zsh-syntax-highlighting
+  zinit light zsh-users/zsh-autosuggestions
+  zinit light zsh-users/zsh-completions
+  zinit light Aloxaf/fzf-tab
+  zinit light MichaelAquilina/zsh-you-should-use
 
-# ── Plugin config ─────────────────────────────
-ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#565f89"
-ZSH_AUTOSUGGEST_STRATEGY=(history completion)
-ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=20
-bindkey '^]' autosuggest-accept
+  # ── Plugin config ─────────────────────────────
+  ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#565f89"
+  ZSH_AUTOSUGGEST_STRATEGY=(history completion)
+  ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=20
+  bindkey '^]' autosuggest-accept
 
-export YSU_MESSAGE_POSITION="after"
-export YSU_MODE=ALL
+  export YSU_MESSAGE_POSITION="after"
+  export YSU_MODE=ALL
+fi
 
 # ─────────────────────────────────────────────
 #  Completion
@@ -79,7 +86,7 @@ if [[ -n ~/.zcompdump(#qN.mh+24) ]]; then
 else
   compinit -C
 fi
-zinit cdreplay -q
+[[ -f "$ZINIT_HOME/zinit.zsh" ]] && zinit cdreplay -q
 
 zstyle ':fzf-tab:*' fzf-flags \
   --color="bg+:#283457,bg:#1a1b26,border:#565f89,hl:#bb9af7,fg:#c0caf5,fg+:#c0caf5,hl+:#7aa2f7,pointer:#7aa2f7"

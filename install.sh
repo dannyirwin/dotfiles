@@ -160,7 +160,14 @@ install_linux_packages() {
     neovim
 
   if ! command -v fd &>/dev/null && command -v fdfind &>/dev/null; then
-    run sudo ln -sf "$(command -v fdfind)" /usr/local/bin/fd
+    local fdfind_bin fd_link="$HOME/.local/bin/fd"
+    fdfind_bin="$(command -v fdfind)"
+    run mkdir -p "$HOME/.local/bin"
+    if run ln -sf "$fdfind_bin" "$fd_link"; then
+      export PATH="$HOME/.local/bin:$PATH"
+    else
+      warn "Could not link fd — use fdfind or alias fd=fdfind"
+    fi
   fi
 
   # Starship
