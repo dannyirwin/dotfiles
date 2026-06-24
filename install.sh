@@ -106,8 +106,10 @@ install_homebrew() {
     log "Installing Homebrew..."
     if $DRY_RUN; then
       printf "\033[0;90m[dry-run]\033[0m /bin/bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\"\n"
+    elif /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"; then
+      success "Installed Homebrew"
     else
-      /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+      warn "Homebrew install failed — continuing (install manually from https://brew.sh)"
     fi
   fi
 }

@@ -7,6 +7,7 @@
 param([switch]$DryRun, [switch]$SkipSkills)
 
 $ErrorActionPreference = "Stop"
+$PSNativeCommandUseErrorActionPreference = $false
 $DOTFILES = $PSScriptRoot
 
 # ─────────────────────────────────────────────
