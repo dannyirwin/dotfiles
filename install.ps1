@@ -35,13 +35,23 @@ function Backup-Existing {
   }
 }
 
+function Ensure-Directory {
+  param($Path)
+  if (Test-Path $Path) { return }
+  if ($DryRun) {
+    Write-Host "[dry-run] New-Item -ItemType Directory $Path" -ForegroundColor Gray
+  } else {
+    New-Item -ItemType Directory -Force $Path | Out-Null
+  }
+}
+
 # ─────────────────────────────────────────────
 #  Symlink helper (requires developer mode or admin)
 # ─────────────────────────────────────────────
 function Link-File {
   param($Src, $Dst)
   $dir = Split-Path $Dst -Parent
-  if (!(Test-Path $dir)) { New-Item -ItemType Directory -Force $dir | Out-Null }
+  Ensure-Directory $dir
 
   if ((Test-Path $Dst) -and !(Get-Item $Dst).LinkType) {
     Warn "Backing up: $Dst"
@@ -134,7 +144,7 @@ function Link-Nvim {
   Log "Linking Neovim config..."
   $dst = "$env:USERPROFILE\.config\nvim"
   $dir = Split-Path $dst -Parent
-  if (!(Test-Path $dir)) { New-Item -ItemType Directory -Force $dir | Out-Null }
+  Ensure-Directory $dir
 
   if ((Test-Path $dst) -and !(Get-Item $dst).LinkType) {
     Warn "Backing up: $dst"
@@ -164,7 +174,7 @@ function Link-Nvim {
 function Setup-PSProfile {
   Log "Setting up PowerShell profile..."
   $profileDir = Split-Path $PROFILE -Parent
-  if (!(Test-Path $profileDir)) { New-Item -ItemType Directory -Force $profileDir | Out-Null }
+  Ensure-Directory $profileDir
 
   $snippet = @"
 
@@ -231,7 +241,7 @@ function Link-Agents {
 
   $agentsDst = "$env:USERPROFILE\.agents"
   $agentsDir = Split-Path $agentsDst -Parent
-  if (!(Test-Path $agentsDir)) { New-Item -ItemType Directory -Force $agentsDir | Out-Null }
+  Ensure-Directory $agentsDir
 
   if ((Test-Path $agentsDst) -and !(Get-Item $agentsDst).LinkType) {
     Warn "Backing up: $agentsDst"

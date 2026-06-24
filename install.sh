@@ -137,9 +137,12 @@ install_mac_packages() {
   for pkg in "${packages[@]}"; do
     if brew list "$pkg" &>/dev/null; then
       log "Already installed: $pkg"
-    else
+    elif $DRY_RUN; then
       run brew install "$pkg"
+    elif brew install "$pkg"; then
       success "Installed: $pkg"
+    else
+      warn "Skipped $pkg (brew install failed)"
     fi
   done
 }
@@ -157,6 +160,7 @@ install_linux_packages() {
     fd-find \
     ripgrep \
     tmux \
+    ncurses-term \
     neovim \
     xclip \
     wl-clipboard
