@@ -175,15 +175,23 @@ install_linux_packages() {
   # Starship
   if ! command -v starship &>/dev/null; then
     log "Installing Starship prompt..."
-    run_pipe 'curl -sS https://starship.rs/install.sh | sh -s -- --yes' \
-      sh -c 'curl -sS https://starship.rs/install.sh | sh -s -- --yes'
+    if run_pipe 'curl -sS https://starship.rs/install.sh | sh -s -- --yes' \
+      sh -c 'curl -sS https://starship.rs/install.sh | sh -s -- --yes'; then
+      success "Installed Starship"
+    else
+      warn "Starship install failed — continuing (install manually from https://starship.rs)"
+    fi
   fi
 
   # zoxide
   if ! command -v zoxide &>/dev/null; then
     log "Installing zoxide..."
-    run_pipe 'curl -sS https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | bash' \
-      bash -c 'curl -sS https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | bash'
+    if run_pipe 'curl -sS https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | bash' \
+      bash -c 'curl -sS https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | bash'; then
+      success "Installed zoxide"
+    else
+      warn "zoxide install failed — continuing (install manually from https://github.com/ajeetdsouza/zoxide)"
+    fi
   fi
 }
 

@@ -22,6 +22,19 @@ function Invoke-Cmd {
   else { & @args }
 }
 
+function Backup-Existing {
+  param($Path)
+  $backup = "$Path.backup"
+  if (Test-Path $backup) {
+    $backup = "$Path.backup.$(Get-Date -Format 'yyyyMMddHHmmss')"
+  }
+  if ($DryRun) {
+    Write-Host "[dry-run] Move-Item $Path $backup" -ForegroundColor Gray
+  } else {
+    Move-Item $Path $backup -Force
+  }
+}
+
 # ─────────────────────────────────────────────
 #  Symlink helper (requires developer mode or admin)
 # ─────────────────────────────────────────────
@@ -31,8 +44,8 @@ function Link-File {
   if (!(Test-Path $dir)) { New-Item -ItemType Directory -Force $dir | Out-Null }
 
   if ((Test-Path $Dst) -and !(Get-Item $Dst).LinkType) {
-    Warn "Backing up: $Dst → $Dst.backup"
-    if (!$DryRun) { Move-Item $Dst "$Dst.backup" -Force }
+    Warn "Backing up: $Dst"
+    Backup-Existing $Dst
   }
 
   if (Get-Item $Dst -ErrorAction SilentlyContinue | Where-Object { $_.LinkType }) {
@@ -57,6 +70,10 @@ function Link-File {
 # ─────────────────────────────────────────────
 function Install-Packages {
   Log "Installing packages via winget..."
+  if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
+    Warn "winget not found — skipping package install"
+    return
+  }
   $packages = @(
     "Starship.Starship",
     "junegunn.fzf",
@@ -120,8 +137,8 @@ function Link-Nvim {
   if (!(Test-Path $dir)) { New-Item -ItemType Directory -Force $dir | Out-Null }
 
   if ((Test-Path $dst) -and !(Get-Item $dst).LinkType) {
-    Warn "Backing up: $dst → $dst.backup"
-    if (!$DryRun) { Move-Item $dst "$dst.backup" -Force }
+    Warn "Backing up: $dst"
+    Backup-Existing $dst
   }
 
   if (Get-Item $dst -ErrorAction SilentlyContinue | Where-Object { $_.LinkType }) {
@@ -192,8 +209,8 @@ function Link-Agents {
 
   $agentsMd = Join-Path $DOTFILES "AGENTS.md"
   if ((Test-Path $agentsMd) -and !(Get-Item $agentsMd).LinkType) {
-    Warn "Backing up: $agentsMd → $agentsMd.backup"
-    if (!$DryRun) { Move-Item $agentsMd "$agentsMd.backup" -Force }
+    Warn "Backing up: $agentsMd"
+    Backup-Existing $agentsMd
   }
   if (Get-Item $agentsMd -ErrorAction SilentlyContinue | Where-Object { $_.LinkType }) {
     if (!$DryRun) { Remove-Item $agentsMd -Force }
@@ -217,8 +234,8 @@ function Link-Agents {
   if (!(Test-Path $agentsDir)) { New-Item -ItemType Directory -Force $agentsDir | Out-Null }
 
   if ((Test-Path $agentsDst) -and !(Get-Item $agentsDst).LinkType) {
-    Warn "Backing up: $agentsDst → $agentsDst.backup"
-    if (!$DryRun) { Move-Item $agentsDst "$agentsDst.backup" -Force }
+    Warn "Backing up: $agentsDst"
+    Backup-Existing $agentsDst
   }
 
   if (Get-Item $agentsDst -ErrorAction SilentlyContinue | Where-Object { $_.LinkType }) {

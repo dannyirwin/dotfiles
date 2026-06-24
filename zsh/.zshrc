@@ -67,7 +67,11 @@ if [[ -f "$ZINIT_HOME/zinit.zsh" ]]; then
   zinit ice wait"0a"
   zinit light Aloxaf/fzf-tab
 
-  zinit ice wait"0a"
+  _zsh_autosuggest_bindkey() {
+    bindkey '^]' autosuggest-accept
+  }
+
+  zinit ice wait"0a" atload'_zsh_autosuggest_bindkey'
   zinit light zsh-users/zsh-autosuggestions
 
   zinit ice wait"0a"
@@ -77,7 +81,6 @@ if [[ -f "$ZINIT_HOME/zinit.zsh" ]]; then
   ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#565f89"
   ZSH_AUTOSUGGEST_STRATEGY=(history completion)
   ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=20
-  bindkey '^]' autosuggest-accept
 
   export YSU_MESSAGE_POSITION="after"
   export YSU_MODE=ALL
