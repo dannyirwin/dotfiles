@@ -146,8 +146,7 @@ if (Get-Command starship -ErrorAction SilentlyContinue) {
   Invoke-Expression (&starship init powershell)
 }
 if (Get-Command zoxide -ErrorAction SilentlyContinue) {
-  Invoke-Expression (& { (zoxide init powershell | Out-String) })
-  Set-Alias -Name cd -Value z -Option AllScope -Force
+  Invoke-Expression (& { (zoxide init powershell --cmd cd | Out-String) })
 }
 # Aliases
 Set-Alias -Name v  -Value nvim   -Option AllScope -ErrorAction SilentlyContinue

@@ -93,9 +93,22 @@ config.enable_scroll_bar           = false
 -- ─────────────────────────────────────────────
 --  Shell (platform-specific)
 -- ─────────────────────────────────────────────
+local function resolve_windows_shell()
+  local candidates = {
+    { "pwsh.exe", "-NoLogo" },
+    { "powershell.exe", "-NoLogo" },
+  }
+  for _, prog in ipairs(candidates) do
+    local ok = wezterm.run_child_process({ "cmd.exe", "/c", "where", prog[1] }, "")
+    if ok then
+      return prog
+    end
+  end
+  return { "powershell.exe", "-NoLogo" }
+end
+
 if is_windows then
-  -- Use PowerShell 7 if available, else fall back to WSL zsh
-  config.default_prog = { "pwsh.exe", "-NoLogo" }
+  config.default_prog = resolve_windows_shell()
 elseif is_mac then
   config.default_prog = { "/bin/zsh", "-l" }
 else

@@ -36,8 +36,15 @@ fi
 # ─────────────────────────────────────────────
 #  Language / locale
 # ─────────────────────────────────────────────
-export LANG="en_US.UTF-8"
-export LC_ALL="en_US.UTF-8"
+if command -v locale &>/dev/null; then
+  for loc in en_US.UTF-8 C.UTF-8 en_US.utf8 C.utf8; do
+    if locale -a 2>/dev/null | grep -qi "^${loc}$"; then
+      export LANG="$loc"
+      export LC_ALL="$loc"
+      break
+    fi
+  done
+fi
 
 # ─────────────────────────────────────────────
 #  History
@@ -176,6 +183,9 @@ fi
 #  Optional: zoxide (smarter cd)
 # ─────────────────────────────────────────────
 if command -v zoxide &>/dev/null; then
-  eval "$(zoxide init bash 2>/dev/null || zoxide init zsh 2>/dev/null)"
-  alias cd='z'
+  if [[ -n "${ZSH_VERSION:-}" ]]; then
+    eval "$(zoxide init zsh --cmd cd)"
+  elif [[ -n "${BASH_VERSION:-}" ]]; then
+    eval "$(zoxide init bash --cmd cd)"
+  fi
 fi

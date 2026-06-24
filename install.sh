@@ -36,6 +36,26 @@ run_pipe() {
   fi
 }
 
+backup_existing() {
+  local dst="$1"
+  local backup="${dst}.backup"
+  if [[ -e "$backup" ]]; then
+    backup="${dst}.backup.$(date +%Y%m%d%H%M%S)"
+  fi
+  run mv "$dst" "$backup"
+}
+
+ensure_brew_path() {
+  if ! $IS_MAC || command -v brew &>/dev/null; then
+    return
+  fi
+  if [[ -x /opt/homebrew/bin/brew ]]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+  elif [[ -x /usr/local/bin/brew ]]; then
+    eval "$(/usr/local/bin/brew shellenv)"
+  fi
+}
+
 # Parse flags
 for arg in "$@"; do
   [[ "$arg" == "--dry-run" ]] && DRY_RUN=true
@@ -66,8 +86,8 @@ link_file() {
   run mkdir -p "$dst_dir"
 
   if [[ -e "$dst" && ! -L "$dst" ]]; then
-    warn "Backing up existing file: $dst → $dst.backup"
-    run mv "$dst" "$dst.backup"
+    warn "Backing up existing file: $dst"
+    backup_existing "$dst"
   fi
 
   if [[ -L "$dst" ]]; then
@@ -94,6 +114,11 @@ install_homebrew() {
 
 install_mac_packages() {
   if ! $IS_MAC; then return; fi
+  ensure_brew_path
+  if ! command -v brew &>/dev/null; then
+    warn "Homebrew not available — skipping Mac package install"
+    return
+  fi
   log "Installing packages via Homebrew..."
 
   local packages=(
@@ -206,8 +231,8 @@ link_nvim() {
   run mkdir -p "$(dirname "$dst")"
 
   if [[ -e "$dst" && ! -L "$dst" ]]; then
-    warn "Backing up existing directory: $dst → $dst.backup"
-    run mv "$dst" "$dst.backup"
+    warn "Backing up existing directory: $dst"
+    backup_existing "$dst"
   fi
 
   if [[ -L "$dst" ]]; then
@@ -234,8 +259,8 @@ link_agents() {
   run mkdir -p "$(dirname "$agents_dst")"
 
   if [[ -e "$agents_dst" && ! -L "$agents_dst" ]]; then
-    warn "Backing up existing directory: $agents_dst → $agents_dst.backup"
-    run mv "$agents_dst" "$agents_dst.backup"
+    warn "Backing up existing directory: $agents_dst"
+    backup_existing "$agents_dst"
   fi
 
   if [[ -L "$agents_dst" ]]; then
@@ -276,8 +301,11 @@ install_skills() {
     return
   fi
 
-  (cd "$DOTFILES_DIR" && npx --yes skills experimental_install)
-  success "Skills installed from skills-lock.json"
+  if (cd "$DOTFILES_DIR" && npx --yes skills experimental_install); then
+    success "Skills installed from skills-lock.json"
+  else
+    warn "Skills install failed — continuing (run 'npx skills experimental_install' in $DOTFILES_DIR manually)"
+  fi
 }
 
 # ─────────────────────────────────────────────
@@ -309,8 +337,12 @@ setup_no_mistakes() {
       printf "\033[0;90m[dry-run]\033[0m cd %s && no-mistakes init\n" "$DOTFILES_DIR"
       return
     fi
-    curl -fsSL "$no_mistakes_url" | sh
-    success "Installed no-mistakes"
+    if curl -fsSL "$no_mistakes_url" | sh; then
+      success "Installed no-mistakes"
+    else
+      warn "no-mistakes install failed — skipping init"
+      return
+    fi
   fi
 
   log "Initializing no-mistakes gate for dotfiles..."
@@ -319,8 +351,11 @@ setup_no_mistakes() {
     return
   fi
 
-  (cd "$DOTFILES_DIR" && no-mistakes init)
-  success "no-mistakes gate initialized (git push no-mistakes <branch>, or /no-mistakes in agents)"
+  if (cd "$DOTFILES_DIR" && no-mistakes init); then
+    success "no-mistakes gate initialized (git push no-mistakes <branch>, or /no-mistakes in agents)"
+  else
+    warn "no-mistakes init failed — continuing (run 'no-mistakes init' in $DOTFILES_DIR manually)"
+  fi
 }
 
 # ─────────────────────────────────────────────
@@ -336,6 +371,7 @@ echo "  ╚═════╝  ╚═════╝    ╚═╝   ╚═╝   
 echo ""
 
 install_homebrew
+ensure_brew_path
 install_mac_packages
 install_linux_packages
 link_wezterm
