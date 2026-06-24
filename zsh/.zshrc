@@ -65,6 +65,7 @@ if [[ -f "$ZINIT_HOME/zinit.zsh" ]]; then
   zinit light zsh-users/zsh-completions
   zinit light Aloxaf/fzf-tab
   zinit light MichaelAquilina/zsh-you-should-use
+  zinit ice wait"0a"
   zinit light zsh-users/zsh-syntax-highlighting
 
   # ── Plugin config ─────────────────────────────
@@ -121,6 +122,7 @@ if command -v fzf &>/dev/null; then
   else
     for f in \
       /opt/homebrew/opt/fzf/shell/key-bindings.zsh \
+      /usr/local/opt/fzf/shell/key-bindings.zsh \
       /usr/share/doc/fzf/examples/key-bindings.zsh; do
       [[ -f "$f" ]] && { source "$f"; break; }
     done

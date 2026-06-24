@@ -258,9 +258,21 @@ link_nvim() {
 link_agents() {
   log "Linking agent instructions..."
 
-  # Cursor and other tools: repo-root AGENTS.md
-  link_file "$DOTFILES_DIR/.agents/AGENTS.md" \
-            "$DOTFILES_DIR/AGENTS.md"
+  # Cursor and other tools: repo-root AGENTS.md (relative target for git portability)
+  local agents_md="$DOTFILES_DIR/AGENTS.md"
+  if [[ -e "$agents_md" && ! -L "$agents_md" ]]; then
+    warn "Backing up existing file: $agents_md"
+    backup_existing "$agents_md"
+  fi
+  if [[ -L "$agents_md" ]]; then
+    run rm "$agents_md"
+  fi
+  if $DRY_RUN; then
+    printf "\033[0;90m[dry-run]\033[0m (cd %s && ln -snf .agents/AGENTS.md AGENTS.md)\n" "$DOTFILES_DIR"
+  else
+    (cd "$DOTFILES_DIR" && ln -snf .agents/AGENTS.md AGENTS.md)
+    success "Linked: $agents_md → .agents/AGENTS.md"
+  fi
 
   # Global agent context (OPINIONS.md, future automation)
   local agents_dst="$HOME/.agents"

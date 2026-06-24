@@ -190,8 +190,27 @@ function gl  { git log --oneline --graph --decorate -20 }
 function Link-Agents {
   Log "Linking agent instructions..."
 
-  Link-File "$DOTFILES\.agents\AGENTS.md" `
-            "$DOTFILES\AGENTS.md"
+  $agentsMd = Join-Path $DOTFILES "AGENTS.md"
+  if ((Test-Path $agentsMd) -and !(Get-Item $agentsMd).LinkType) {
+    Warn "Backing up: $agentsMd → $agentsMd.backup"
+    if (!$DryRun) { Move-Item $agentsMd "$agentsMd.backup" -Force }
+  }
+  if (Get-Item $agentsMd -ErrorAction SilentlyContinue | Where-Object { $_.LinkType }) {
+    if (!$DryRun) { Remove-Item $agentsMd -Force }
+  }
+  if ($DryRun) {
+    Write-Host "[dry-run] (cd $DOTFILES && link AGENTS.md .agents\AGENTS.md)" -ForegroundColor Gray
+  } else {
+    Push-Location $DOTFILES
+    try {
+      New-Item -ItemType SymbolicLink -Path "AGENTS.md" -Target ".agents\AGENTS.md" -Force -ErrorAction Stop | Out-Null
+      Ok "Linked: $agentsMd → .agents\AGENTS.md"
+    } catch {
+      Warn "Could not link repo-root AGENTS.md ($($_.Exception.Message))"
+    } finally {
+      Pop-Location
+    }
+  }
 
   $agentsDst = "$env:USERPROFILE\.agents"
   $agentsDir = Split-Path $agentsDst -Parent
