@@ -1,5 +1,5 @@
 # ~/.config/shell/common.sh
-# Shared config sourced by both .zshrc and .bashrc
+# Shared config sourced by .zshrc (bash-compatible if you source it yourself)
 # Dotfiles: github.com/dannyirwin/dotfiles
 
 # ─────────────────────────────────────────────

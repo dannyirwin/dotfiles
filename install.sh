@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # install.sh — dotfiles bootstrap for macOS and Linux
 # Usage: bash install.sh [--dry-run] [--skip-skills] [--skip-no-mistakes]
+# Installs packages (Homebrew or apt-get), links configs, agent skills, and no-mistakes.
 # Dotfiles: github.com/dannyirwin/dotfiles
 
 set -euo pipefail

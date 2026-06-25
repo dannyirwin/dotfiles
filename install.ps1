@@ -1,5 +1,6 @@
 # install.ps1 — dotfiles bootstrap for Windows
-# Run from an elevated PowerShell window:
+# Usage: .\install.ps1 [-DryRun] [-SkipSkills]
+# Symbolic links require Developer Mode or an elevated PowerShell session.
 #   Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
 #   .\install.ps1
 # Dotfiles: github.com/dannyirwin/dotfiles
@@ -333,5 +334,5 @@ Ok "All done! Restart WezTerm to see changes."
 Write-Host ""
 Write-Host "  Optional next steps:" -ForegroundColor Cyan
 Write-Host "  • Install JetBrains Mono: https://www.jetbrains.com/legalnotices/font/"
-Write-Host "  • Add a local.ps1 in this folder for machine-specific config (not tracked)"
+Write-Host "  • Dot-source `$HOME\dotfiles\local.ps1` from your profile for machine-specific config (not tracked)"
 Write-Host ""
