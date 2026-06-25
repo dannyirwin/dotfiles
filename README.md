@@ -50,6 +50,16 @@ cd ~/dotfiles
 bash install.sh
 ```
 
+Running `bash install.sh` in a terminal shows an interactive menu.
+Use `--profile` to skip the menu:
+
+```bash
+bash install.sh --profile coding   # packages + WezTerm, tmux, zsh, nvim
+bash install.sh --profile full     # coding tools + agent setup
+```
+
+Non-interactive runs (for example `curl ... | sh`) default to `full`.
+
 ### Windows
 
 ```powershell
@@ -59,25 +69,38 @@ cd $HOME\dotfiles
 .\install.ps1
 ```
 
+Use `-Profile Coding` or `-Profile Full` to skip the interactive menu.
+Non-interactive runs default to `Full`.
+
 ### Install flags
 
 | Flag | Applies to | Effect |
 | --- | --- | --- |
+| `--profile coding\|full` | `install.sh`, curl bootstrap | Skip menu; install selected profile |
 | `--dry-run` | `install.sh`, curl bootstrap | Print actions without changes |
 | `--skip-skills` | `install.sh`, curl bootstrap | Skip skills install |
 | `--skip-no-mistakes` | `install.sh`, curl bootstrap | Skip [no-mistakes](https://github.com/kunchenguid/no-mistakes) gate setup |
 | `--skip-plannotator` | `install.sh`, curl bootstrap | Skip [Plannotator](https://plannotator.ai) install |
+| `-Profile Coding\|Full\|Custom` | `install.ps1` | Skip menu; install selected profile |
 | `-DryRun` | `install.ps1` | Print actions without making changes |
 | `-SkipSkills` | `install.ps1` | Skip agent skills install |
+
+Profiles:
+
+| Profile | macOS / Linux | Windows |
+| --- | --- | --- |
+| **Coding** | Packages + WezTerm, tmux, zsh, nvim | Packages + WezTerm, tmux, nvim, PowerShell profile |
+| **Full** | Coding + agents, skills, no-mistakes, plannotator | Coding + agents and skills |
 
 Examples:
 
 ```bash
 bash install.sh --dry-run
-bash install.sh --skip-skills --skip-no-mistakes
+bash install.sh --profile coding
+bash install.sh --profile full --skip-plannotator
 curl -fsSL \
   https://raw.githubusercontent.com/dannyirwin/dotfiles/main/docs/install.sh \
-  | sh -s -- --dry-run
+  | sh -s -- --profile coding
 ```
 
 Environment variables for the curl bootstrap:
@@ -92,7 +115,8 @@ Windows examples:
 
 ```powershell
 .\install.ps1 -DryRun
-.\install.ps1 -SkipSkills
+.\install.ps1 -Profile Coding
+.\install.ps1 -Profile Full -SkipSkills
 ```
 
 ## What the install scripts do
@@ -103,23 +127,26 @@ they replace.
 
 **macOS / Linux (`install.sh`)** also:
 
-- Installs Homebrew on macOS when missing
+- Prompts for an install profile when run interactively, or accepts `--profile coding|full`
+- Installs Homebrew on macOS when missing (coding and full profiles)
 - Installs CLI tools via Homebrew (macOS) or `apt-get` (Debian/Ubuntu Linux)
 - Links Zsh config (`~/.zshrc`, `common.sh`, Starship)
-- Installs and initializes [no-mistakes](https://github.com/kunchenguid/no-mistakes)
-  unless `--skip-no-mistakes` is passed
-- Installs [Plannotator](https://plannotator.ai) unless `--skip-plannotator` is passed
+- With the **full** profile (or custom + agent tooling): links agent instructions,
+  installs skills from `skills-lock.json`, and sets up no-mistakes and Plannotator
+- `--skip-*` flags still apply within the full profile
 
 Linux package install requires `apt-get`.
 Other distros need manual package installs before linking.
 
 **Windows (`install.ps1`)** also:
 
+- Prompts for an install profile when run interactively, or accepts `-Profile Coding|Full|Custom`
 - Installs CLI tools via `winget` when available
 - Links Starship config and appends a dotfiles block to your PowerShell profile
   (Starship, zoxide, git aliases)
 - Does not link Zsh config (use PowerShell on Windows)
-- Does not install or configure no-mistakes
+- With the **Full** profile: links agent instructions and installs skills
+- Does not install or configure no-mistakes or Plannotator
 
 ## How symlinking works
 
