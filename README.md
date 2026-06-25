@@ -11,16 +11,17 @@ Install these yourself before running the bootstrap scripts:
 - **git** - required for clone and no-mistakes setup
 - **Node.js** (optional) - needed for `npx skills` agent skill installs
 
-On Windows, enable **Developer Mode** (Settings → System → For developers) so symbolic links work without an elevated shell.
+On Windows, enable **Developer Mode** (Settings → System → For developers) so
+symbolic links work without an elevated shell.
 
 ## What's included
 
 | Path | Purpose |
-|---|---|
-| `wezterm/wezterm.lua` | WezTerm - Tokyo Night theme, key bindings, cross-platform shell detection |
-| `tmux/tmux.conf` | tmux - Tokyo Night theme, vi copy mode, pane/window navigation |
+| --- | --- |
+| `wezterm/wezterm.lua` | WezTerm - Tokyo Night, key bindings, shell detection |
+| `tmux/tmux.conf` | tmux - Tokyo Night, vi copy mode, pane/window navigation |
 | `zsh/.zshrc` | Zsh - Zinit plugins, completions, history, fzf, Starship |
-| `zsh/common.sh` | Shared aliases and functions (linked to `~/.config/shell/common.sh`, sourced by `.zshrc`) |
+| `zsh/common.sh` | Shared aliases (linked to `~/.config/shell/common.sh`) |
 | `zsh/starship.toml` | Starship prompt - Tokyo Night colors |
 | `nvim/` | Neovim - Tokyo Night, lazy.nvim, which-key, Telescope |
 | `.agents/AGENTS.md` | Shared agent instructions (Cursor, Claude Code, etc.) |
@@ -37,7 +38,8 @@ On Windows, enable **Developer Mode** (Settings → System → For developers) s
 One-liner (clone + install):
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/dannyirwin/dotfiles/main/docs/install.sh | sh
+curl -fsSL \
+  https://raw.githubusercontent.com/dannyirwin/dotfiles/main/docs/install.sh | sh
 ```
 
 Or clone manually:
@@ -60,10 +62,10 @@ cd $HOME\dotfiles
 ### Install flags
 
 | Flag | Applies to | Effect |
-|---|---|---|
-| `--dry-run` | `install.sh`, curl bootstrap | Print actions without making changes |
-| `--skip-skills` | `install.sh`, curl bootstrap | Skip `npx skills experimental_install` |
-| `--skip-no-mistakes` | `install.sh`, curl bootstrap | Skip [no-mistakes](https://github.com/kunchenguid/no-mistakes) install and gate setup |
+| --- | --- | --- |
+| `--dry-run` | `install.sh`, curl bootstrap | Print actions without changes |
+| `--skip-skills` | `install.sh`, curl bootstrap | Skip skills install |
+| `--skip-no-mistakes` | `install.sh`, curl bootstrap | Skip [no-mistakes](https://github.com/kunchenguid/no-mistakes) gate setup |
 | `-DryRun` | `install.ps1` | Print actions without making changes |
 | `-SkipSkills` | `install.ps1` | Skip agent skills install |
 
@@ -72,13 +74,15 @@ Examples:
 ```bash
 bash install.sh --dry-run
 bash install.sh --skip-skills --skip-no-mistakes
-curl -fsSL https://raw.githubusercontent.com/dannyirwin/dotfiles/main/docs/install.sh | sh -s -- --dry-run
+curl -fsSL \
+  https://raw.githubusercontent.com/dannyirwin/dotfiles/main/docs/install.sh \
+  | sh -s -- --dry-run
 ```
 
 Environment variables for the curl bootstrap:
 
 | Variable | Default |
-|---|---|
+| --- | --- |
 | `DOTFILES_REPO` | `dannyirwin/dotfiles` |
 | `DOTFILES_BRANCH` | `main` |
 | `DOTFILES_DIR` | `$HOME/dotfiles` |
@@ -92,14 +96,17 @@ Windows examples:
 
 ## What the install scripts do
 
-Both scripts link configs into the usual locations, install agent skills from `skills-lock.json` when Node.js is available, and back up any existing files they replace.
+Both scripts link configs into the usual locations, install agent skills from
+`skills-lock.json` when Node.js is available, and back up any existing files
+they replace.
 
 **macOS / Linux (`install.sh`)** also:
 
 - Installs Homebrew on macOS when missing
 - Installs CLI tools via Homebrew (macOS) or `apt-get` (Debian/Ubuntu Linux)
 - Links Zsh config (`~/.zshrc`, `common.sh`, Starship)
-- Installs and initializes [no-mistakes](https://github.com/kunchenguid/no-mistakes) unless `--skip-no-mistakes` is passed
+- Installs and initializes [no-mistakes](https://github.com/kunchenguid/no-mistakes)
+  unless `--skip-no-mistakes` is passed
 
 Linux package install requires `apt-get`.
 Other distros need manual package installs before linking.
@@ -107,18 +114,20 @@ Other distros need manual package installs before linking.
 **Windows (`install.ps1`)** also:
 
 - Installs CLI tools via `winget` when available
-- Links Starship config and appends a dotfiles block to your PowerShell profile (Starship, zoxide, git aliases)
+- Links Starship config and appends a dotfiles block to your PowerShell profile
+  (Starship, zoxide, git aliases)
 - Does not link Zsh config (use PowerShell on Windows)
 - Does not install or configure no-mistakes
 
 ## How symlinking works
 
-Edit files in `~/dotfiles` (or `%USERPROFILE%\dotfiles` on Windows) and commit to save changes.
+Edit files in `~/dotfiles` (or `%USERPROFILE%\dotfiles` on Windows) and commit
+to save changes.
 Re-run the install script only when new symlinks or install steps are added.
 
-### macOS / Linux
+### Symlink map (macOS / Linux)
 
-```
+```text
 ~/.config/wezterm/wezterm.lua  →  ~/dotfiles/wezterm/wezterm.lua
 ~/.tmux.conf                    →  ~/dotfiles/tmux/tmux.conf
 ~/.zshrc                        →  ~/dotfiles/zsh/.zshrc
@@ -130,9 +139,9 @@ Re-run the install script only when new symlinks or install steps are added.
 ~/.claude/CLAUDE.md             →  ~/dotfiles/.agents/AGENTS.md
 ```
 
-### Windows
+### Symlink map (Windows)
 
-```
+```text
 %USERPROFILE%\.config\wezterm\wezterm.lua  →  %USERPROFILE%\dotfiles\wezterm\wezterm.lua
 %USERPROFILE%\.tmux.conf                    →  %USERPROFILE%\dotfiles\tmux\tmux.conf
 %USERPROFILE%\.config\starship.toml         →  %USERPROFILE%\dotfiles\zsh\starship.toml
@@ -147,7 +156,7 @@ Re-run the install script only when new symlinks or install steps are added.
 First launch installs plugins automatically via lazy.nvim.
 
 | Key | Action |
-|---|---|
+| --- | --- |
 | `<Space>ff` | Find files (Telescope) |
 | `<Space><Space>` | Find files (shortcut) |
 | `<Space>fr` | Recent files |
@@ -165,20 +174,23 @@ First launch installs plugins automatically via lazy.nvim.
 The source of truth is `.agents/AGENTS.md`.
 Root `AGENTS.md` is a symlink so Cursor discovers it in this repo.
 
-`install.sh` and `install.ps1` link those files so tools find them in the usual places:
+`install.sh` and `install.ps1` link those files so tools find them in the
+usual places:
 
 - `AGENTS.md` at the repo root for Cursor in this project
 - `~/.agents/` for global access to `OPINIONS.md` and skills
 - `~/.claude/CLAUDE.md` for Claude Code global instructions
 
 Edit `.agents/AGENTS.md` for rules that apply across agents.
-Edit `.agents/OPINIONS.md` for durable taste and engineering beliefs agents should read on demand.
+Edit `.agents/OPINIONS.md` for durable taste and engineering beliefs agents
+should read on demand.
 
 ### Skills
 
 Skills are managed with the agent-agnostic [`npx skills`](https://skills.sh/) CLI.
 Commit `skills-lock.json` only.
-Installed skill files are generated and gitignored (`.agents/skills/`, `.cursor/skills/`, `.claude/skills/`, and `.agents/.skill-lock.json`).
+Installed skill files are generated and gitignored (`.agents/skills/`,
+`.cursor/skills/`, `.claude/skills/`, and `.agents/.skill-lock.json`).
 
 Pre-locked skills: `gh-axi`, `lavish`, and `skill-creator`.
 
@@ -190,7 +202,8 @@ npx skills add anthropics/skills --skill skill-creator -y
 git add skills-lock.json
 ```
 
-Install locked skills on a new machine (also runs automatically from the install scripts):
+Install locked skills on a new machine (also runs automatically from the install
+scripts):
 
 ```bash
 cd ~/dotfiles
@@ -199,8 +212,12 @@ npx skills experimental_install
 
 ### no-mistakes
 
-On macOS and Linux, `install.sh` installs [no-mistakes](https://github.com/kunchenguid/no-mistakes) and runs `no-mistakes init` for this repo when it is a git checkout with an `origin` remote.
-That adds a `no-mistakes` git remote and installs the `/no-mistakes` agent skill at user level.
+On macOS and Linux, `install.sh` installs
+[no-mistakes](https://github.com/kunchenguid/no-mistakes) and runs
+`no-mistakes init` for this repo when it is a git checkout with an `origin`
+remote.
+That adds a `no-mistakes` git remote and installs the `/no-mistakes` agent skill
+at user level.
 
 Push through the validation gate:
 
@@ -219,14 +236,16 @@ Use `-SkipSkills` on Windows only to skip agent skill installs.
 Anything you do not want tracked (API keys, work paths, etc.) goes in:
 
 - **macOS / Linux:** `~/.zshrc.local` - auto-sourced at the bottom of `.zshrc`
-- **Windows:** add overrides to your PowerShell profile, or dot-source a local `$HOME\dotfiles\local.ps1` from there yourself
+- **Windows:** add overrides to your PowerShell profile, or dot-source a local
+  `$HOME\dotfiles\local.ps1` from there yourself
 
 ## Recommended fonts
 
 WezTerm falls back gracefully without these, but they look best:
 
 - [JetBrains Mono](https://www.jetbrains.com/legalnotices/font/)
-- [Cascadia Code](https://github.com/microsoft/cascadia-code) (Windows; bundled with some terminals)
+- [Cascadia Code](https://github.com/microsoft/cascadia-code) (Windows; bundled
+  with some terminals)
 
 ## Updating
 
@@ -242,6 +261,7 @@ On Windows, run `.\install.ps1` instead of `bash install.sh`.
 ## Adding more configs
 
 1. Add config files under a new folder in this repo (for example `git/`).
-2. Add a `link_*()` function to `install.sh` and a matching `Link-*` function to `install.ps1`.
+2. Add a `link_*()` function to `install.sh` and a matching `Link-*` function
+   to `install.ps1`.
 3. Call it from the run section at the bottom of each script.
 4. Document the new path in this README.
