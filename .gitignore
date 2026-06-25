@@ -1,0 +1,5 @@
+# Installed by `npx skills experimental_install` from skills-lock.json
+.agents/skills/
+.agents/.skill-lock.json
+.cursor/skills/
+.claude/skills/
