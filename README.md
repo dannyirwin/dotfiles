@@ -66,6 +66,7 @@ cd $HOME\dotfiles
 | `--dry-run` | `install.sh`, curl bootstrap | Print actions without changes |
 | `--skip-skills` | `install.sh`, curl bootstrap | Skip skills install |
 | `--skip-no-mistakes` | `install.sh`, curl bootstrap | Skip [no-mistakes](https://github.com/kunchenguid/no-mistakes) gate setup |
+| `--skip-plannotator` | `install.sh`, curl bootstrap | Skip [Plannotator](https://plannotator.ai) install |
 | `-DryRun` | `install.ps1` | Print actions without making changes |
 | `-SkipSkills` | `install.ps1` | Skip agent skills install |
 
@@ -107,6 +108,7 @@ they replace.
 - Links Zsh config (`~/.zshrc`, `common.sh`, Starship)
 - Installs and initializes [no-mistakes](https://github.com/kunchenguid/no-mistakes)
   unless `--skip-no-mistakes` is passed
+- Installs [Plannotator](https://plannotator.ai) unless `--skip-plannotator` is passed
 
 Linux package install requires `apt-get`.
 Other distros need manual package installs before linking.
@@ -230,6 +232,19 @@ Start a fresh chat session so the skill is loaded.
 
 Windows is not supported by no-mistakes yet.
 Use `-SkipSkills` on Windows only to skip agent skill installs.
+
+### Plannotator
+
+On macOS and Linux, `install.sh` installs [Plannotator](https://plannotator.ai) when it is not already on `PATH`.
+The installer runs non-interactively with default options (core binary and agent skills only).
+
+Re-run the upstream installer to change extras or model-invocable skills:
+
+```bash
+curl -fsSL https://plannotator.ai/install.sh | bash
+```
+
+Windows uses a separate PowerShell installer and is not wired into `install.ps1` yet.
 
 ## Machine-specific config
 

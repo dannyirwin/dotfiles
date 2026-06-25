@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # install.sh — dotfiles bootstrap for macOS and Linux
-# Usage: bash install.sh [--dry-run] [--skip-skills] [--skip-no-mistakes]
-# Installs packages (Homebrew or apt-get), links configs, agent skills, and no-mistakes.
+# Usage: bash install.sh [--dry-run] [--skip-skills] [--skip-no-mistakes] [--skip-plannotator]
+# Installs packages (Homebrew or apt-get), links configs, agent skills, no-mistakes, and plannotator.
 # Dotfiles: github.com/dannyirwin/dotfiles
 
 set -euo pipefail
@@ -10,6 +10,7 @@ DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DRY_RUN=false
 SKIP_SKILLS=false
 SKIP_NO_MISTAKES=false
+SKIP_PLANNOTATOR=false
 
 # ─────────────────────────────────────────────
 #  Helpers
@@ -62,6 +63,7 @@ for arg in "$@"; do
 	[[ "$arg" == "--dry-run" ]] && DRY_RUN=true
 	[[ "$arg" == "--skip-skills" ]] && SKIP_SKILLS=true
 	[[ "$arg" == "--skip-no-mistakes" ]] && SKIP_NO_MISTAKES=true
+	[[ "$arg" == "--skip-plannotator" ]] && SKIP_PLANNOTATOR=true
 done
 
 $DRY_RUN && warn "Dry-run mode — no changes will be made."
@@ -424,6 +426,36 @@ setup_no_mistakes() {
 }
 
 # ─────────────────────────────────────────────
+#  Plannotator (plan review + agent skills)
+# ─────────────────────────────────────────────
+setup_plannotator() {
+	if $SKIP_PLANNOTATOR; then
+		warn "Skipping plannotator setup (--skip-plannotator)"
+		return
+	fi
+
+	local plannotator_url="https://plannotator.ai/install.sh"
+	export PATH="$HOME/.local/bin:$PATH"
+
+	if command -v plannotator &>/dev/null; then
+		log "plannotator already installed — skipping"
+		return
+	fi
+
+	log "Installing plannotator..."
+	if $DRY_RUN; then
+		printf "\033[0;90m[dry-run]\033[0m curl -fsSL %s | bash -s -- --non-interactive\n" "$plannotator_url"
+		return
+	fi
+
+	if curl -fsSL "$plannotator_url" | bash -s -- --non-interactive; then
+		success "plannotator installed (run plannotator --help, or use plannotator skills in agents)"
+	else
+		warn "plannotator install failed — continuing (install manually from https://plannotator.ai)"
+	fi
+}
+
+# ─────────────────────────────────────────────
 #  Run
 # ─────────────────────────────────────────────
 echo ""
@@ -446,6 +478,7 @@ link_nvim
 link_agents
 install_skills
 setup_no_mistakes
+setup_plannotator
 
 echo ""
 success "All done! Restart WezTerm and open a new shell to see changes."
