@@ -1,5 +1,5 @@
 # install.ps1 — dotfiles bootstrap for Windows
-# Usage: .\install.ps1 [-Profile Coding|Full] [-DryRun] [-SkipSkills]
+# Usage: .\install.ps1 [-Profile Coding|Full|Custom] [-DryRun] [-SkipSkills] [-SkipTreehouse]
 # Symbolic links require Developer Mode or an elevated PowerShell session.
 #   Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
 #   .\install.ps1
@@ -9,7 +9,8 @@ param(
   [ValidateSet("Coding", "Full", "Custom")]
   [string]$Profile,
   [switch]$DryRun,
-  [switch]$SkipSkills
+  [switch]$SkipSkills,
+  [switch]$SkipTreehouse
 )
 
 $ErrorActionPreference = "Stop"
@@ -31,7 +32,7 @@ function Resolve-Profile {
       "Coding" { $script:InstallAgentStack = $false }
       "Full" { $script:InstallAgentStack = $true }
       "Custom" {
-        $agents = Read-Host "Install agent tooling? (agents, skills) [y/N]"
+        $agents = Read-Host "Install agent tooling? (agents, skills, treehouse) [y/N]"
         $script:InstallAgentStack = $agents -match '^[Yy]$'
       }
     }
@@ -49,7 +50,7 @@ function Resolve-Profile {
       "1" { $script:InstallAgentStack = $false }
       "2" { $script:InstallAgentStack = $true }
       "3" {
-        $agents = Read-Host "Install agent tooling? (agents, skills) [y/N]"
+        $agents = Read-Host "Install agent tooling? (agents, skills, treehouse) [y/N]"
         $script:InstallAgentStack = $agents -match '^[Yy]$'
       }
       default {
@@ -355,6 +356,32 @@ function Install-Skills {
   }
 }
 
+function Install-Treehouse {
+  if ($SkipTreehouse) {
+    Warn "Skipping treehouse setup (-SkipTreehouse)"
+    return
+  }
+
+  if (Get-Command treehouse -ErrorAction SilentlyContinue) {
+    Log "treehouse already installed — skipping"
+    return
+  }
+
+  Log "Installing treehouse..."
+
+  if ($DryRun) {
+    Write-Host "[dry-run] irm https://kunchenguid.github.io/treehouse/install.ps1 | iex" -ForegroundColor Gray
+    return
+  }
+
+  try {
+    irm https://kunchenguid.github.io/treehouse/install.ps1 | iex
+    Ok "treehouse installed (cd into a repo and run: treehouse)"
+  } catch {
+    Warn "treehouse install failed — continuing (install manually from https://github.com/kunchenguid/treehouse)"
+  }
+}
+
 # ─────────────────────────────────────────────
 #  Run
 # ─────────────────────────────────────────────
@@ -376,6 +403,7 @@ Setup-PSProfile
 if ($InstallAgentStack) {
   Link-Agents
   Install-Skills
+  Install-Treehouse
 }
 
 Write-Host ""

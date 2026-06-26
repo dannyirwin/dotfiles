@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # install.sh — dotfiles bootstrap for macOS and Linux
-# Usage: bash install.sh [--profile coding|full] [--dry-run] [--skip-skills] [--skip-no-mistakes] [--skip-plannotator]
-# Installs packages (Homebrew or apt-get), links configs, agent skills, no-mistakes, and plannotator.
+# Usage: bash install.sh [--profile coding|full] [--dry-run] [--skip-skills] [--skip-no-mistakes] [--skip-plannotator] [--skip-treehouse]
+# Installs packages (Homebrew or apt-get), links configs, agent skills, no-mistakes, plannotator, and treehouse.
 # Interactive profile menu when run in a terminal without --profile.
 # Dotfiles: github.com/dannyirwin/dotfiles
 
@@ -12,6 +12,7 @@ DRY_RUN=false
 SKIP_SKILLS=false
 SKIP_NO_MISTAKES=false
 SKIP_PLANNOTATOR=false
+SKIP_TREEHOUSE=false
 PROFILE=""
 INSTALL_PACKAGES=true
 INSTALL_CONFIGS=true
@@ -70,6 +71,7 @@ while [[ $# -gt 0 ]]; do
 	--skip-skills) SKIP_SKILLS=true ;;
 	--skip-no-mistakes) SKIP_NO_MISTAKES=true ;;
 	--skip-plannotator) SKIP_PLANNOTATOR=true ;;
+	--skip-treehouse) SKIP_TREEHOUSE=true ;;
 	--profile)
 		shift
 		PROFILE="${1:-}"
@@ -80,7 +82,7 @@ while [[ $# -gt 0 ]]; do
 		;;
 	-h | --help)
 		cat <<'EOF'
-Usage: bash install.sh [--profile coding|full] [--dry-run] [--skip-skills] [--skip-no-mistakes] [--skip-plannotator]
+Usage: bash install.sh [--profile coding|full] [--dry-run] [--skip-skills] [--skip-no-mistakes] [--skip-plannotator] [--skip-treehouse]
 
 Profiles:
   coding  Packages + WezTerm, tmux, zsh, nvim
@@ -119,7 +121,7 @@ prompt_profile_menu() {
 	2) PROFILE=full ;;
 	3)
 		PROFILE=custom
-		read -r -p "Install agent tooling? (agents, skills, no-mistakes, plannotator) [y/N]: " agents
+		read -r -p "Install agent tooling? (agents, skills, no-mistakes, plannotator, treehouse) [y/N]: " agents
 		if [[ "$agents" =~ ^[Yy]$ ]]; then
 			INSTALL_AGENT_STACK=true
 		else
@@ -555,6 +557,36 @@ setup_plannotator() {
 }
 
 # ─────────────────────────────────────────────
+#  treehouse (pooled git worktrees for agents)
+# ─────────────────────────────────────────────
+setup_treehouse() {
+	if $SKIP_TREEHOUSE; then
+		warn "Skipping treehouse setup (--skip-treehouse)"
+		return
+	fi
+
+	local treehouse_url="https://kunchenguid.github.io/treehouse/install.sh"
+	export PATH="$HOME/.local/bin:$PATH"
+
+	if command -v treehouse &>/dev/null; then
+		log "treehouse already installed — skipping"
+		return
+	fi
+
+	log "Installing treehouse..."
+	if $DRY_RUN; then
+		printf "\033[0;90m[dry-run]\033[0m curl -fsSL %s | sh\n" "$treehouse_url"
+		return
+	fi
+
+	if curl -fsSL "$treehouse_url" | sh; then
+		success "treehouse installed (cd into a repo and run: treehouse)"
+	else
+		warn "treehouse install failed — continuing (install manually from https://github.com/kunchenguid/treehouse)"
+	fi
+}
+
+# ─────────────────────────────────────────────
 #  Run
 # ─────────────────────────────────────────────
 echo ""
@@ -583,6 +615,7 @@ if $INSTALL_AGENT_STACK; then
 	install_skills
 	setup_no_mistakes
 	setup_plannotator
+	setup_treehouse
 fi
 
 echo ""

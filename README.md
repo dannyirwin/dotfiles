@@ -81,16 +81,18 @@ Non-interactive runs default to `Full`.
 | `--skip-skills` | `install.sh`, curl bootstrap | Skip skills install |
 | `--skip-no-mistakes` | `install.sh`, curl bootstrap | Skip [no-mistakes](https://github.com/kunchenguid/no-mistakes) gate setup |
 | `--skip-plannotator` | `install.sh`, curl bootstrap | Skip [Plannotator](https://plannotator.ai) install |
+| `--skip-treehouse` | `install.sh`, curl bootstrap | Skip [treehouse](https://github.com/kunchenguid/treehouse) install |
 | `-Profile Coding\|Full\|Custom` | `install.ps1` | Skip menu; install selected profile |
 | `-DryRun` | `install.ps1` | Print actions without making changes |
 | `-SkipSkills` | `install.ps1` | Skip agent skills install |
+| `-SkipTreehouse` | `install.ps1` | Skip treehouse install |
 
 Profiles:
 
 | Profile | macOS / Linux | Windows |
 | --- | --- | --- |
 | **Coding** | Packages + WezTerm, tmux, zsh, nvim | Packages + WezTerm, tmux, nvim, PowerShell profile |
-| **Full** | Coding + agents, skills, no-mistakes, plannotator | Coding + agents and skills |
+| **Full** | Coding + agents, skills, no-mistakes, plannotator, treehouse | Coding + agents, skills, and treehouse |
 
 Examples:
 
@@ -132,7 +134,7 @@ they replace.
 - Installs CLI tools via Homebrew (macOS) or `apt-get` (Debian/Ubuntu Linux)
 - Links Zsh config (`~/.zshrc`, `common.sh`, Starship)
 - With the **full** profile (or custom + agent tooling): links agent instructions,
-  installs skills from `skills-lock.json`, and sets up no-mistakes and Plannotator
+  installs skills from `skills-lock.json`, and sets up no-mistakes, Plannotator, and treehouse
 - `--skip-*` flags still apply within the full profile
 
 Linux package install requires `apt-get`.
@@ -145,7 +147,7 @@ Other distros need manual package installs before linking.
 - Links Starship config and appends a dotfiles block to your PowerShell profile
   (Starship, zoxide, git aliases)
 - Does not link Zsh config (use PowerShell on Windows)
-- With the **Full** profile: links agent instructions and installs skills
+- With the **Full** profile: links agent instructions, installs skills, and treehouse
 - Does not install or configure no-mistakes or Plannotator
 
 ## How symlinking works
@@ -272,6 +274,18 @@ curl -fsSL https://plannotator.ai/install.sh | bash
 ```
 
 Windows uses a separate PowerShell installer and is not wired into `install.ps1` yet.
+
+### treehouse
+
+On macOS and Linux, `install.sh` installs [treehouse](https://github.com/kunchenguid/treehouse) when it is not already on `PATH`.
+treehouse gives each agent session an isolated git worktree from a reusable pool.
+
+```bash
+cd myproject
+treehouse    # enter a pooled worktree subshell; type exit when done
+```
+
+Windows installs treehouse via `install.ps1` in the **Full** profile.
 
 ## Machine-specific config
 
