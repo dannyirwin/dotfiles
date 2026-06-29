@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # install.sh — dotfiles bootstrap for macOS and Linux
 # Usage: bash install.sh [--profile coding|full] [--dry-run] [--skip-skills] [--skip-no-mistakes] [--skip-plannotator] [--skip-treehouse]
+#        bash install.sh --scope project [--target <path>] [apply-project options]
 # Installs packages (Homebrew or apt-get), links configs, agent skills, no-mistakes, plannotator, and treehouse.
 # Interactive profile menu when run in a terminal without --profile.
 # Dotfiles: github.com/dannyirwin/dotfiles
@@ -8,6 +9,33 @@
 set -euo pipefail
 
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Project scope: delegate to scripts/apply-project.sh and exit.
+APPLY_ARGS=()
+SCOPE=""
+while [[ $# -gt 0 ]]; do
+	case "$1" in
+	--scope)
+		shift
+		SCOPE="${1:-}"
+		if [[ "$SCOPE" != "project" ]]; then
+			printf "\033[0;31m✖\033[0m  Unknown scope: %s (use --scope project)\n" "$SCOPE" >&2
+			exit 1
+		fi
+		shift
+		;;
+	*)
+		APPLY_ARGS+=("$1")
+		shift
+		;;
+	esac
+done
+
+if [[ "$SCOPE" == "project" ]]; then
+	exec bash "$DOTFILES_DIR/scripts/apply-project.sh" --scope project "${APPLY_ARGS[@]}"
+fi
+
+set -- "${APPLY_ARGS[@]}"
 DRY_RUN=false
 SKIP_SKILLS=false
 SKIP_NO_MISTAKES=false
@@ -83,10 +111,15 @@ while [[ $# -gt 0 ]]; do
 	-h | --help)
 		cat <<'EOF'
 Usage: bash install.sh [--profile coding|full] [--dry-run] [--skip-skills] [--skip-no-mistakes] [--skip-plannotator] [--skip-treehouse]
+       bash install.sh --scope project [options] --target <path>
 
 Profiles:
   coding  Packages + WezTerm, tmux, zsh, nvim
   full    Coding tools + agent setup (default for non-interactive runs)
+
+Project scope:
+  bash install.sh --scope project --target <path>   Apply agent/Cursor config to a repo
+  See: bash scripts/apply-project.sh --help
 
 Without --profile, shows an interactive menu when run in a terminal.
 EOF
