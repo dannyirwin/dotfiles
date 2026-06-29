@@ -24,7 +24,18 @@ The CONQR project was not modified when this archive was created.
 
 ## Deploy into a project
 
-Copy (or symlink) into the target repo's `.cursor/` tree:
+Use the dotfiles apply script (preferred):
+
+```bash
+cd ~/dotfiles
+bash scripts/apply-project.sh ~/src/my-target-repo
+```
+
+That copies this bundle into `<repo>/.cursor/`, merges `hooks.json`, vendors
+shared agent files under `<repo>/.agents/`, and writes a starter `AGENTS.md`
+when the project does not have one.
+
+Manual copy (same result):
 
 ```bash
 DOTFILES=~/dotfiles/cursor/implement-plan

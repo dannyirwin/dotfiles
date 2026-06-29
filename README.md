@@ -200,6 +200,59 @@ First launch installs plugins automatically via lazy.nvim.
 
 ## Agent setup
 
+### Global vs project scope
+
+Dotfiles supports two scopes.
+Use both: global for your machine, project for repos (especially Cursor Cloud).
+
+| Concern | Global (`install.sh`) | Project (`scripts/apply-project.sh`) |
+| --- | --- | --- |
+| Shell, terminal, editor | `zsh`, `tmux`, `nvim`, WezTerm | Not applied |
+| Personal agent baseline | `~/.agents` symlink | `.agents/` copied into the repo |
+| Root instructions | This repo's `AGENTS.md` | Project `AGENTS.md` + shared baseline |
+| Cursor skills, agents, hooks | Optional `~/.cursor/` (manual) | `.cursor/` in the repo |
+| Skills lock | `skills-lock.json` at dotfiles root | Project `skills-lock.json` (inherited or merged) |
+| Cursor Cloud | Not available (`~` is not in the VM) | Committed repo files are discovered |
+
+**Global install** (your laptop):
+
+```bash
+cd ~/dotfiles
+bash install.sh --profile full
+```
+
+**Project apply** (local Cursor and Cursor Cloud):
+
+```bash
+cd ~/dotfiles
+bash scripts/apply-project.sh ~/src/my-app
+# or:
+bash install.sh --scope project --target ~/src/my-app
+```
+
+Then edit the project's `AGENTS.md` with build commands, env vars, and cloud VM
+notes.
+Commit `.cursor/`, `.agents/`, `AGENTS.md`, and `skills-lock.json` so cloud
+agents see the same config.
+
+`apply-project.sh` options:
+
+| Flag | Effect |
+| --- | --- |
+| `--mode copy` (default) | Copy Cursor bundle files into the project (commit to git) |
+| `--mode link` | Symlink Cursor bundle files to `~/dotfiles` (local iteration) |
+| `--dry-run` | Print actions without changes |
+| `--skip-skills` | Skip `skills-lock.json` and `npx skills` |
+| `--skip-agents` | Skip `.agents/` and root `AGENTS.md` |
+| `--skip-cursor` | Skip `.cursor/` bundle |
+| `--bundle implement-plan` | Cursor bundle name (default: `implement-plan`) |
+| `--skills inherit` (default) | Copy dotfiles lock when the project has none |
+| `--skills merge` | Merge dotfiles skills into an existing project lock |
+| `--skills skip` | Do not touch `skills-lock.json` |
+
+For Cursor Cloud environment setup, run project apply in `.cursor/environment.json`
+install step or snapshot creation, then commit the generated files.
+
 ### Instructions
 
 The source of truth is `.agents/AGENTS.md`.
