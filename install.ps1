@@ -1,15 +1,22 @@
 # install.ps1 — dotfiles bootstrap for Windows
-# Usage: .\install.ps1 [-DryRun] [-SkipSkills]
+# Usage: .\install.ps1 [-Profile Coding|Full|Custom] [-DryRun] [-SkipSkills] [-SkipTreehouse]
 # Symbolic links require Developer Mode or an elevated PowerShell session.
 #   Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
 #   .\install.ps1
 # Dotfiles: github.com/dannyirwin/dotfiles
 
-param([switch]$DryRun, [switch]$SkipSkills)
+param(
+  [ValidateSet("Coding", "Full", "Custom")]
+  [string]$Profile,
+  [switch]$DryRun,
+  [switch]$SkipSkills,
+  [switch]$SkipTreehouse
+)
 
 $ErrorActionPreference = "Stop"
 $PSNativeCommandUseErrorActionPreference = $false
 $DOTFILES = $PSScriptRoot
+$InstallAgentStack = $true
 
 # ─────────────────────────────────────────────
 #  Helpers
@@ -19,9 +26,47 @@ function Ok     { Write-Host "✔  $args" -ForegroundColor Green }
 function Warn   { Write-Host "⚠  $args" -ForegroundColor Yellow }
 function Err    { Write-Host "✖  $args" -ForegroundColor Red }
 
-function Invoke-Cmd {
-  if ($DryRun) { Write-Host "[dry-run] $args" -ForegroundColor Gray }
-  else { & @args }
+function Resolve-Profile {
+  if ($Profile) {
+    switch ($Profile) {
+      "Coding" { $script:InstallAgentStack = $false }
+      "Full" { $script:InstallAgentStack = $true }
+      "Custom" {
+        $agents = Read-Host "Install agent tooling? (agents, skills, treehouse) [y/N]"
+        $script:InstallAgentStack = $agents -match '^[Yy]$'
+      }
+    }
+  } elseif ([Console]::IsInputRedirected -eq $false) {
+    Write-Host ""
+    Write-Host "What do you want to install?" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "  1) Coding tools   packages + WezTerm, tmux, nvim, PowerShell profile"
+    Write-Host "  2) Full setup     coding tools + agent setup"
+    Write-Host "  3) Custom         pick agent tooling separately"
+    Write-Host ""
+    $choice = Read-Host "Choice [1-3] (default: 2)"
+    if ([string]::IsNullOrWhiteSpace($choice)) { $choice = "2" }
+    switch ($choice) {
+      "1" { $script:InstallAgentStack = $false }
+      "2" { $script:InstallAgentStack = $true }
+      "3" {
+        $agents = Read-Host "Install agent tooling? (agents, skills, treehouse) [y/N]"
+        $script:InstallAgentStack = $agents -match '^[Yy]$'
+      }
+      default {
+        Warn "Invalid choice — using full setup"
+        $script:InstallAgentStack = $true
+      }
+    }
+  } else {
+    $script:InstallAgentStack = $true
+  }
+
+  if ($InstallAgentStack) {
+    Log "Install profile: full (coding tools + agent setup)"
+  } else {
+    Log "Install profile: coding (terminal, editor, PowerShell profile)"
+  }
 }
 
 function Backup-Existing {
@@ -311,6 +356,32 @@ function Install-Skills {
   }
 }
 
+function Install-Treehouse {
+  if ($SkipTreehouse) {
+    Warn "Skipping treehouse setup (-SkipTreehouse)"
+    return
+  }
+
+  if (Get-Command treehouse -ErrorAction SilentlyContinue) {
+    Log "treehouse already installed — skipping"
+    return
+  }
+
+  Log "Installing treehouse..."
+
+  if ($DryRun) {
+    Write-Host "[dry-run] irm https://kunchenguid.github.io/treehouse/install.ps1 | iex" -ForegroundColor Gray
+    return
+  }
+
+  try {
+    irm https://kunchenguid.github.io/treehouse/install.ps1 | iex
+    Ok "treehouse installed (cd into a repo and run: treehouse)"
+  } catch {
+    Warn "treehouse install failed — continuing (install manually from https://github.com/kunchenguid/treehouse)"
+  }
+}
+
 # ─────────────────────────────────────────────
 #  Run
 # ─────────────────────────────────────────────
@@ -320,14 +391,20 @@ Write-Host ""
 
 if ($DryRun) { Warn "Dry-run mode — no changes will be made." }
 
+Resolve-Profile
+
 Install-Packages
 Link-WezTerm
 Link-Tmux
 Link-Starship
 Link-Nvim
-Link-Agents
-Install-Skills
 Setup-PSProfile
+
+if ($InstallAgentStack) {
+  Link-Agents
+  Install-Skills
+  Install-Treehouse
+}
 
 Write-Host ""
 Ok "All done! Restart WezTerm to see changes."

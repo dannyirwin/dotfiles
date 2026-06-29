@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # install.sh — dotfiles bootstrap for macOS and Linux
-# Usage: bash install.sh [--dry-run] [--skip-skills] [--skip-no-mistakes] [--skip-plannotator]
-# Installs packages (Homebrew or apt-get), links configs, agent skills, no-mistakes, and plannotator.
+# Usage: bash install.sh [--profile coding|full] [--dry-run] [--skip-skills] [--skip-no-mistakes] [--skip-plannotator] [--skip-treehouse]
+# Installs packages (Homebrew or apt-get), links configs, agent skills, no-mistakes, plannotator, and treehouse.
+# Interactive profile menu when run in a terminal without --profile.
 # Dotfiles: github.com/dannyirwin/dotfiles
 
 set -euo pipefail
@@ -11,6 +12,11 @@ DRY_RUN=false
 SKIP_SKILLS=false
 SKIP_NO_MISTAKES=false
 SKIP_PLANNOTATOR=false
+SKIP_TREEHOUSE=false
+PROFILE=""
+INSTALL_PACKAGES=true
+INSTALL_CONFIGS=true
+INSTALL_AGENT_STACK=true
 
 # ─────────────────────────────────────────────
 #  Helpers
@@ -59,14 +65,109 @@ ensure_brew_path() {
 }
 
 # Parse flags
-for arg in "$@"; do
-	[[ "$arg" == "--dry-run" ]] && DRY_RUN=true
-	[[ "$arg" == "--skip-skills" ]] && SKIP_SKILLS=true
-	[[ "$arg" == "--skip-no-mistakes" ]] && SKIP_NO_MISTAKES=true
-	[[ "$arg" == "--skip-plannotator" ]] && SKIP_PLANNOTATOR=true
+while [[ $# -gt 0 ]]; do
+	case "$1" in
+	--dry-run) DRY_RUN=true ;;
+	--skip-skills) SKIP_SKILLS=true ;;
+	--skip-no-mistakes) SKIP_NO_MISTAKES=true ;;
+	--skip-plannotator) SKIP_PLANNOTATOR=true ;;
+	--skip-treehouse) SKIP_TREEHOUSE=true ;;
+	--profile)
+		shift
+		PROFILE="${1:-}"
+		if [[ -z "$PROFILE" ]]; then
+			error "--profile requires an argument (coding or full)"
+			exit 1
+		fi
+		;;
+	-h | --help)
+		cat <<'EOF'
+Usage: bash install.sh [--profile coding|full] [--dry-run] [--skip-skills] [--skip-no-mistakes] [--skip-plannotator] [--skip-treehouse]
+
+Profiles:
+  coding  Packages + WezTerm, tmux, zsh, nvim
+  full    Coding tools + agent setup (default for non-interactive runs)
+
+Without --profile, shows an interactive menu when run in a terminal.
+EOF
+		exit 0
+		;;
+	*)
+		error "Unknown option: $1 (try --help)"
+		exit 1
+		;;
+	esac
+	shift
 done
 
 $DRY_RUN && warn "Dry-run mode — no changes will be made."
+
+# ─────────────────────────────────────────────
+#  Install profiles
+# ─────────────────────────────────────────────
+prompt_profile_menu() {
+	echo ""
+	echo "What do you want to install?"
+	echo ""
+	echo "  1) Coding tools   packages + WezTerm, tmux, zsh, nvim"
+	echo "  2) Full setup     coding tools + agent tooling"
+	echo "  3) Custom         pick agent tooling separately"
+	echo ""
+	local choice agents
+	read -r -p "Choice [1-3] (default: 2): " choice
+	choice="${choice:-2}"
+	case "$choice" in
+	1) PROFILE=coding ;;
+	2) PROFILE=full ;;
+	3)
+		PROFILE=custom
+		read -r -p "Install agent tooling? (agents, skills, no-mistakes, plannotator, treehouse) [y/N]: " agents
+		if [[ "$agents" =~ ^[Yy]$ ]]; then
+			INSTALL_AGENT_STACK=true
+		else
+			INSTALL_AGENT_STACK=false
+		fi
+		;;
+	*)
+		warn "Invalid choice — using full setup"
+		PROFILE=full
+		;;
+	esac
+}
+
+apply_profile() {
+	INSTALL_PACKAGES=true
+	INSTALL_CONFIGS=true
+
+	case "$PROFILE" in
+	coding) INSTALL_AGENT_STACK=false ;;
+	full) INSTALL_AGENT_STACK=true ;;
+	custom) ;;
+	*)
+		error "Unknown profile: $PROFILE (use coding or full)"
+		exit 1
+		;;
+	esac
+}
+
+resolve_profile() {
+	if [[ -z "$PROFILE" ]]; then
+		if [[ -t 0 ]]; then
+			prompt_profile_menu
+		else
+			PROFILE=full
+		fi
+	fi
+	apply_profile
+
+	if $INSTALL_AGENT_STACK; then
+		log "Install profile: full (coding tools + agent tooling)"
+	else
+		log "Install profile: coding (terminal, shell, editor)"
+	fi
+}
+
+resolve_profile
 
 # ─────────────────────────────────────────────
 #  Platform
@@ -456,6 +557,36 @@ setup_plannotator() {
 }
 
 # ─────────────────────────────────────────────
+#  treehouse (pooled git worktrees for agents)
+# ─────────────────────────────────────────────
+setup_treehouse() {
+	if $SKIP_TREEHOUSE; then
+		warn "Skipping treehouse setup (--skip-treehouse)"
+		return
+	fi
+
+	local treehouse_url="https://kunchenguid.github.io/treehouse/install.sh"
+	export PATH="$HOME/.local/bin:$PATH"
+
+	if command -v treehouse &>/dev/null; then
+		log "treehouse already installed — skipping"
+		return
+	fi
+
+	log "Installing treehouse..."
+	if $DRY_RUN; then
+		printf "\033[0;90m[dry-run]\033[0m curl -fsSL %s | sh\n" "$treehouse_url"
+		return
+	fi
+
+	if curl -fsSL "$treehouse_url" | sh; then
+		success "treehouse installed (cd into a repo and run: treehouse)"
+	else
+		warn "treehouse install failed — continuing (install manually from https://github.com/kunchenguid/treehouse)"
+	fi
+}
+
+# ─────────────────────────────────────────────
 #  Run
 # ─────────────────────────────────────────────
 echo ""
@@ -467,18 +598,25 @@ echo "  ██████╔╝╚██████╔╝   ██║   ██
 echo "  ╚═════╝  ╚═════╝    ╚═╝   ╚═╝     ╚═╝╚══════╝╚══════╝╚══════╝"
 echo ""
 
-install_homebrew
-ensure_brew_path
-install_mac_packages
-install_linux_packages
-link_wezterm
-link_tmux
-link_shell
-link_nvim
-link_agents
-install_skills
-setup_no_mistakes
-setup_plannotator
+if $INSTALL_PACKAGES; then
+	install_homebrew
+	ensure_brew_path
+	install_mac_packages
+	install_linux_packages
+fi
+if $INSTALL_CONFIGS; then
+	link_wezterm
+	link_tmux
+	link_shell
+	link_nvim
+fi
+if $INSTALL_AGENT_STACK; then
+	link_agents
+	install_skills
+	setup_no_mistakes
+	setup_plannotator
+	setup_treehouse
+fi
 
 echo ""
 success "All done! Restart WezTerm and open a new shell to see changes."
