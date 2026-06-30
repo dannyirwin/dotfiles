@@ -47,7 +47,7 @@ It is not an application monorepo.
 bash install.sh --profile full
 
 # Copy agent/Cursor config into another repo (local + Cursor Cloud)
-bash scripts/apply-project.sh ~/src/my-target-repo
+bash scripts/apply-project.sh ~/src/project-dewy
 ```
 
 ### Cursor Cloud
