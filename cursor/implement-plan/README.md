@@ -1,8 +1,9 @@
 # implement-plan pipeline
 
-Verbatim archive of the Cursor `/implement-plan` workflow copied from the CONQR
-repo (`.cursor/`) on 2026-06-29.
-The CONQR project was not modified when this archive was created.
+Portable Cursor bundle for plan authoring and execution.
+Shipped with dotfiles and applied to projects via `scripts/apply-project.sh`.
+
+Primary target project: [project-dewy](https://github.com/dannyirwin/project-dewy).
 
 ## What each folder contains
 
@@ -12,8 +13,7 @@ The CONQR project was not modified when this archive was created.
 | `skills/code-review/` | Diff review skill invoked by `plan-verifier` |
 | `agents/` | `plan-phase-implementer` and `plan-verifier` subagent prompts |
 | `hooks/` | Plan Mode mirror hook (`hooks.json` + `sync-plan-to-workspace.sh`) |
-| `plans/` | Workspace plans README and example epic handoff prompt |
-| `docs/` | Workflow and agent-config architecture notes from Plan Mode sessions |
+| `plans/` | Workspace plans README |
 
 ## Pipeline flow
 
@@ -24,31 +24,17 @@ The CONQR project was not modified when this archive was created.
 
 ## Deploy into a project
 
-Use the dotfiles apply script (preferred):
-
 ```bash
 cd ~/dotfiles
-bash scripts/apply-project.sh ~/src/my-target-repo
+bash scripts/apply-project.sh ~/src/project-dewy
 ```
 
 That copies this bundle into `<repo>/.cursor/`, merges `hooks.json`, vendors
 shared agent files under `<repo>/.agents/`, and writes a starter `AGENTS.md`
 when the project does not have one.
 
-Manual copy (same result):
-
-```bash
-DOTFILES=~/dotfiles/cursor/implement-plan
-REPO=.cursor   # at repo root
-
-mkdir -p "$REPO"/{skills,agents,hooks,plans}
-cp -R "$DOTFILES"/skills/* "$REPO"/skills/
-cp "$DOTFILES"/agents/*.md "$REPO"/agents/
-cp "$DOTFILES"/hooks/sync-plan-to-workspace.sh "$REPO"/hooks/
-mkdir -p "$REPO"/plans
-```
-
-Merge `hooks/hooks.json` into the project's `.cursor/hooks.json` (or copy if none exists).
+Then edit the project's `AGENTS.md ## Project` section with build commands,
+env vars, and architecture notes.
 
 ## Deploy user-global (all projects)
 
@@ -61,12 +47,3 @@ cp "$DOTFILES"/agents/*.md ~/.cursor/agents/
 ```
 
 Project `.cursor/agents/` overrides `~/.cursor/agents/` when names match.
-
-## Source paths
-
-| Archive file | Original source |
-| --- | --- |
-| `skills/*`, `agents/*`, `hooks/*`, `plans/*` (except handoff) | `conqr/.cursor/` |
-| `plans/postgis_h3_handoff_prompt.md` | `conqr/.cursor/plans/` |
-| `docs/planning_workflow_audit.plan.md` | `~/.cursor/plans/planning_workflow_audit_edfe4015.plan.md` |
-| `docs/agent_config_architecture.plan.md` | `~/.cursor/plans/agent_config_architecture_1ad4c5c8.plan.md` |

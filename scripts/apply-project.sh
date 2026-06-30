@@ -180,6 +180,11 @@ install_tree_entry() {
 				return
 			fi
 		fi
+		# Applying dotfiles to itself: src and dst are the same file.
+		if [[ -e "$src" ]] && [[ "$(realpath "$src")" == "$(realpath "$dst")" ]]; then
+			success "Already present: $dst"
+			return
+		fi
 		warn "Replacing existing path: $dst"
 		run rm -rf "$dst"
 	fi

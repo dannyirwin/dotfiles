@@ -225,9 +225,9 @@ bash install.sh --profile full
 
 ```bash
 cd ~/dotfiles
-bash scripts/apply-project.sh ~/src/my-app
+bash scripts/apply-project.sh ~/src/project-dewy
 # or:
-bash install.sh --scope project --target ~/src/my-app
+bash install.sh --scope project --target ~/src/project-dewy
 ```
 
 Then edit the project's `AGENTS.md` with build commands, env vars, and cloud VM
@@ -256,7 +256,8 @@ install step or snapshot creation, then commit the generated files.
 ### Instructions
 
 The source of truth is `.agents/AGENTS.md`.
-Root `AGENTS.md` is a symlink so Cursor discovers it in this repo.
+In this repo, root `AGENTS.md` is a composite file (shared baseline plus a
+`## Project` section) so Cursor Cloud can read it without `~/.agents` symlinks.
 
 `install.sh` and `install.ps1` link those files so tools find them in the
 usual places:
@@ -273,8 +274,11 @@ should read on demand.
 
 Skills are managed with the agent-agnostic [`npx skills`](https://skills.sh/) CLI.
 Commit `skills-lock.json` only.
-Installed skill files are generated and gitignored (`.agents/skills/`,
-`.cursor/skills/`, `.claude/skills/`, and `.agents/.skill-lock.json`).
+Installed skill files from `npx skills` are generated and gitignored
+(`.agents/skills/`, npx additions under `.cursor/skills/`, `.claude/skills/`,
+and `.agents/.skill-lock.json`).
+Bundled orchestration skills (`implement-plan`, `code-review`) are committed
+under `.cursor/skills/` after `apply-project.sh`.
 
 Pre-locked skills: `gh-axi`, `lavish`, and `skill-creator`.
 

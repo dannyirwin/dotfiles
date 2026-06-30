@@ -1,5 +1,3 @@
-<!-- dotfiles:shared-agents -->
-
 # Agent instructions
 
 These are common instructions for Danny's agents across all scenarios.
@@ -34,42 +32,3 @@ These are common instructions for Danny's agents across all scenarios.
 
 When work would benefit from Danny's taste or beliefs, read `.agents/OPINIONS.md`.
 Start with the engineering and tooling sections; treat empty sections as unsettled.
-
-## Project
-
-This repo is the **source** for personal dotfiles and portable agent bundles.
-It is not an application monorepo.
-
-### Install and apply
-
-```bash
-# Global machine setup (laptop)
-bash install.sh --profile full
-
-# Copy agent/Cursor config into another repo (local + Cursor Cloud)
-bash scripts/apply-project.sh ~/src/project-dewy
-```
-
-### Cursor Cloud
-
-Cloud VMs do not have `~/.agents` symlinks.
-Use the committed `.agents/` directory and `.cursor/` bundle in this repo.
-Edit `AGENTS.md` (this file) for repo-specific notes; edit `.agents/AGENTS.md` for
-personal rules that should propagate to all projects via `apply-project.sh`.
-
-### Agent bundles
-
-Portable Cursor bundles live under `cursor/` (default: `cursor/implement-plan/`).
-Subagent prompts under `.cursor/agents/` are templates - customize per target
-project after `apply-project.sh`, especially the Conventions section.
-
-### Lint and test
-
-Run shellcheck on changed shell scripts when editing install/apply tooling.
-No application test suite in this repo.
-
-### Plan workflow
-
-- Author plans in Cursor Plan Mode (hook mirrors to `.cursor/plans/` when installed).
-- Execute with `/implement-plan` on a plan file path.
-- Bundles and subagents ship from `cursor/implement-plan/`; customize after apply.
