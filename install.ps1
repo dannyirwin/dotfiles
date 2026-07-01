@@ -6,8 +6,9 @@
 # Dotfiles: github.com/dannyirwin/dotfiles
 
 param(
+  [Alias("Profile")]
   [ValidateSet("Coding", "Full", "Custom")]
-  [string]$Profile,
+  [string]$InstallProfile,
   [switch]$DryRun,
   [switch]$SkipSkills,
   [switch]$SkipTreehouse
@@ -21,18 +22,18 @@ $InstallAgentStack = $true
 # ─────────────────────────────────────────────
 #  Helpers
 # ─────────────────────────────────────────────
-function Log    { Write-Host "▶  $args" -ForegroundColor Blue }
-function Ok     { Write-Host "✔  $args" -ForegroundColor Green }
-function Warn   { Write-Host "⚠  $args" -ForegroundColor Yellow }
-function Err    { Write-Host "✖  $args" -ForegroundColor Red }
+function Log    { Write-Host ('>  ' + $args) -ForegroundColor Blue }
+function Ok     { Write-Host ('+  ' + $args) -ForegroundColor Green }
+function Warn   { Write-Host ('!  ' + $args) -ForegroundColor Yellow }
+function Err    { Write-Host ('x  ' + $args) -ForegroundColor Red }
 
 function Resolve-Profile {
-  if ($Profile) {
-    switch ($Profile) {
+  if ($InstallProfile) {
+    switch ($InstallProfile) {
       "Coding" { $script:InstallAgentStack = $false }
       "Full" { $script:InstallAgentStack = $true }
       "Custom" {
-        $agents = Read-Host "Install agent tooling? (agents, skills, treehouse) [y/N]"
+        $agents = Read-Host 'Install agent tooling? (agents, skills, treehouse) [y/N]'
         $script:InstallAgentStack = $agents -match '^[Yy]$'
       }
     }
@@ -40,21 +41,21 @@ function Resolve-Profile {
     Write-Host ""
     Write-Host "What do you want to install?" -ForegroundColor Cyan
     Write-Host ""
-    Write-Host "  1) Coding tools   packages + WezTerm, tmux, nvim, PowerShell profile"
-    Write-Host "  2) Full setup     coding tools + agent setup"
-    Write-Host "  3) Custom         pick agent tooling separately"
+    Write-Host '  1) Coding tools   packages + WezTerm, tmux, nvim, PowerShell profile'
+    Write-Host '  2) Full setup     coding tools + agent setup'
+    Write-Host '  3) Custom         pick agent tooling separately'
     Write-Host ""
-    $choice = Read-Host "Choice [1-3] (default: 2)"
+    $choice = Read-Host 'Choice [1-3] (default: 2)'
     if ([string]::IsNullOrWhiteSpace($choice)) { $choice = "2" }
     switch ($choice) {
       "1" { $script:InstallAgentStack = $false }
       "2" { $script:InstallAgentStack = $true }
       "3" {
-        $agents = Read-Host "Install agent tooling? (agents, skills, treehouse) [y/N]"
+        $agents = Read-Host 'Install agent tooling? (agents, skills, treehouse) [y/N]'
         $script:InstallAgentStack = $agents -match '^[Yy]$'
       }
       default {
-        Warn "Invalid choice — using full setup"
+        Warn 'Invalid choice - using full setup'
         $script:InstallAgentStack = $true
       }
     }
@@ -63,9 +64,9 @@ function Resolve-Profile {
   }
 
   if ($InstallAgentStack) {
-    Log "Install profile: full (coding tools + agent setup)"
+    Log 'Install profile: full (coding tools + agent setup)'
   } else {
-    Log "Install profile: coding (terminal, editor, PowerShell profile)"
+    Log 'Install profile: coding (terminal, editor, PowerShell profile)'
   }
 }
 
@@ -110,7 +111,7 @@ function Link-File {
   }
 
   if ($DryRun) {
-    Write-Host "[dry-run] Link $Dst → $Src" -ForegroundColor Gray
+    Write-Host "[dry-run] Link $Dst -> $Src" -ForegroundColor Gray
     return
   }
 
@@ -118,7 +119,7 @@ function Link-File {
     New-Item -ItemType SymbolicLink -Path $Dst -Target $Src -Force -ErrorAction Stop | Out-Null
     Ok "Linked: $Dst"
   } catch {
-    Warn "Could not link $Dst — enable Developer Mode or run as admin ($($_.Exception.Message))"
+    Warn "Could not link $Dst - enable Developer Mode or run as admin ($($_.Exception.Message))"
   }
 }
 
@@ -128,7 +129,7 @@ function Link-File {
 function Install-Packages {
   Log "Installing packages via winget..."
   if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
-    Warn "winget not found — skipping package install"
+    Warn 'winget not found - skipping package install'
     return
   }
   $packages = @(
@@ -150,7 +151,7 @@ function Install-Packages {
     if ($LASTEXITCODE -eq 0) {
       Ok "Installed: $pkg"
     } else {
-      Warn "Skipped $pkg (winget exit $LASTEXITCODE)"
+      Warn "Skipped $pkg ``(winget exit $LASTEXITCODE``)"
     }
   }
 }
@@ -203,7 +204,7 @@ function Link-Nvim {
   }
 
   if ($DryRun) {
-    Write-Host "[dry-run] Link $dst → $DOTFILES\nvim" -ForegroundColor Gray
+    Write-Host "[dry-run] Link $dst -> $DOTFILES\nvim" -ForegroundColor Gray
     return
   }
 
@@ -211,7 +212,7 @@ function Link-Nvim {
     New-Item -ItemType SymbolicLink -Path $dst -Target "$DOTFILES\nvim" -Force -ErrorAction Stop | Out-Null
     Ok "Linked: $dst"
   } catch {
-    Warn "Could not link $dst — enable Developer Mode or run as admin ($($_.Exception.Message))"
+    Warn "Could not link $dst - enable Developer Mode or run as admin ($($_.Exception.Message))"
   }
 }
 
@@ -220,6 +221,12 @@ function Link-Nvim {
 # ─────────────────────────────────────────────
 function Setup-PSProfile {
   Log "Setting up PowerShell profile..."
+
+  if ($DryRun) {
+    Write-Host "[dry-run] Would append dotfiles block to $PROFILE" -ForegroundColor Gray
+    return
+  }
+
   $profileDir = Split-Path $PROFILE -Parent
   Ensure-Directory $profileDir
 
@@ -243,18 +250,13 @@ function gl  { git log --oneline --graph --decorate -20 }
 # ────────────────────────────────────────────
 "@
 
-  if ($DryRun) {
-    Write-Host "[dry-run] Would append dotfiles block to $PROFILE" -ForegroundColor Gray
-    return
-  }
-
   if (!(Test-Path $PROFILE)) { New-Item -ItemType File -Force $PROFILE | Out-Null }
 
-  if (!(Select-String -Path $PROFILE -Pattern "── Dotfiles ──" -Quiet)) {
+  if (!(Select-String -Path $PROFILE -Pattern '# ── Dotfiles ──' -Quiet)) {
     Add-Content $PROFILE $snippet
     Ok "PowerShell profile updated: $PROFILE"
   } else {
-    Warn "Dotfiles block already in PowerShell profile — skipping."
+    Warn 'Dotfiles block already in PowerShell profile - skipping.'
   }
 }
 
@@ -273,12 +275,12 @@ function Link-Agents {
     if (!$DryRun) { Remove-Item $agentsMd -Force }
   }
   if ($DryRun) {
-    Write-Host "[dry-run] (cd $DOTFILES && link AGENTS.md .agents\AGENTS.md)" -ForegroundColor Gray
+    Write-Host "[dry-run] ``(cd $DOTFILES && link AGENTS.md .agents\AGENTS.md``)" -ForegroundColor Gray
   } else {
     Push-Location $DOTFILES
     try {
       New-Item -ItemType SymbolicLink -Path "AGENTS.md" -Target ".agents\AGENTS.md" -Force -ErrorAction Stop | Out-Null
-      Ok "Linked: $agentsMd → .agents\AGENTS.md"
+      Ok "Linked: $agentsMd -> .agents\AGENTS.md"
     } catch {
       Warn "Could not link repo-root AGENTS.md ($($_.Exception.Message))"
     } finally {
@@ -300,7 +302,7 @@ function Link-Agents {
   }
 
   if ($DryRun) {
-    Write-Host "[dry-run] Link $agentsDst → $DOTFILES\.agents" -ForegroundColor Gray
+    Write-Host "[dry-run] Link $agentsDst -> $DOTFILES\.agents" -ForegroundColor Gray
     Link-File "$DOTFILES\.agents\AGENTS.md" `
               "$env:USERPROFILE\.claude\CLAUDE.md"
     return
@@ -310,7 +312,7 @@ function Link-Agents {
     New-Item -ItemType SymbolicLink -Path $agentsDst -Target "$DOTFILES\.agents" -Force -ErrorAction Stop | Out-Null
     Ok "Linked: $agentsDst"
   } catch {
-    Warn "Could not link $agentsDst — enable Developer Mode or run as admin ($($_.Exception.Message))"
+    Warn "Could not link $agentsDst - enable Developer Mode or run as admin ($($_.Exception.Message))"
   }
 
   Link-File "$DOTFILES\.agents\AGENTS.md" `
@@ -322,17 +324,17 @@ function Link-Agents {
 # ─────────────────────────────────────────────
 function Install-Skills {
   if ($SkipSkills) {
-    Warn "Skipping skills install (-SkipSkills)"
+    Warn 'Skipping skills install (-SkipSkills)'
     return
   }
 
   if (!(Test-Path "$DOTFILES\skills-lock.json")) {
-    Log "No skills-lock.json found — skipping skills install"
+    Log 'No skills-lock.json found - skipping skills install'
     return
   }
 
   if (!(Get-Command npx -ErrorAction SilentlyContinue)) {
-    Warn "npx not found — skipping skills install (install Node.js to enable)"
+    Warn 'npx not found - skipping skills install (install Node.js to enable)'
     return
   }
 
@@ -349,7 +351,7 @@ function Install-Skills {
     if ($LASTEXITCODE -eq 0) {
       Ok "Skills installed from skills-lock.json"
     } else {
-      Warn "Skills install failed — continuing (run 'npx skills experimental_install' in $DOTFILES manually)"
+      Warn "Skills install failed - continuing ``(run 'npx skills experimental_install' in $DOTFILES manually``)"
     }
   } finally {
     Pop-Location
@@ -358,12 +360,12 @@ function Install-Skills {
 
 function Install-Treehouse {
   if ($SkipTreehouse) {
-    Warn "Skipping treehouse setup (-SkipTreehouse)"
+    Warn 'Skipping treehouse setup (-SkipTreehouse)'
     return
   }
 
   if (Get-Command treehouse -ErrorAction SilentlyContinue) {
-    Log "treehouse already installed — skipping"
+    Log 'treehouse already installed - skipping'
     return
   }
 
@@ -376,9 +378,9 @@ function Install-Treehouse {
 
   try {
     irm https://kunchenguid.github.io/treehouse/install.ps1 | iex
-    Ok "treehouse installed (cd into a repo and run: treehouse)"
+    Ok 'treehouse installed (cd into a repo and run: treehouse)'
   } catch {
-    Warn "treehouse install failed — continuing (install manually from https://github.com/kunchenguid/treehouse)"
+    Warn 'treehouse install failed - continuing (install manually from https://github.com/kunchenguid/treehouse)'
   }
 }
 
@@ -386,10 +388,10 @@ function Install-Treehouse {
 #  Run
 # ─────────────────────────────────────────────
 Write-Host ""
-Write-Host "  DOTFILES — Windows installer" -ForegroundColor Cyan
+Write-Host '  DOTFILES - Windows installer' -ForegroundColor Cyan
 Write-Host ""
 
-if ($DryRun) { Warn "Dry-run mode — no changes will be made." }
+if ($DryRun) { Warn 'Dry-run mode - no changes will be made.' }
 
 Resolve-Profile
 
@@ -411,5 +413,5 @@ Ok "All done! Restart WezTerm to see changes."
 Write-Host ""
 Write-Host "  Optional next steps:" -ForegroundColor Cyan
 Write-Host "  • Install JetBrains Mono: https://www.jetbrains.com/legalnotices/font/"
-Write-Host "  • Dot-source `$HOME\dotfiles\local.ps1` from your profile for machine-specific config (not tracked)"
+Write-Host '  • Dot-source $HOME\dotfiles\local.ps1 from your profile for machine-specific config (not tracked)'
 Write-Host ""
